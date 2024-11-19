@@ -25,8 +25,12 @@ Functions.NinjutsuChanged = {}
 Functions.CharacterAdded = {}
 Functions.PlayerAdded = {}
 Functions.PlayerRemoved = {}
+Functions.UserInputBegan = {}
+Functions.UserInputEnded = {}
 Functions.CharacterTouched = {}
 Functions.WhitelistCharacterTouched = {}
+Functions.WorkspaceDescendantAdded = {}
+Functions.WorkspaceDescendantRemoved = {}
 
 local Constants = {
     BodyParts = {"Head","HumanoidRootPart","UpperTorso","LowerTorso","RightUpperArm","LeftUpperArm","RightLowerArm","LeftLowerArm","RightHand","LeftHand","RightUpperLeg","LeftUpperLeg","RightLowerLeg","LeftLowerLeg","RightFoot", "LeftFoot"};
@@ -1295,6 +1299,25 @@ Functions.CheckAllParts = function(char)
     return true
 end
 
+Functions.GetBubble = function()
+    if Character and Functions.GetRoot(Character) then
+        local root = Functions.GetRoot(Character)
+        local beforepos = root.CFrame
+        local ff = Character:FindFirstChild("ForceField")
+        if not ff then
+            if Character.Humanoid.Health == Character.Humanoid.MaxHealth then
+                repeat
+                    root.CFrame = CFrame.new(70,98,-335)
+                    tas.wait(0.03)
+                until Character:FindFirstChild("ForceField")
+                root.CFrame = beforepos
+            end
+        else
+            return
+        end
+    end
+end
+
 Functions.InitCharacterTouched = function(Player,CharType)
     if Player.Character then
         Functions.CheckAllParts(Player.Character)
@@ -1378,13 +1401,17 @@ Functions.ListEmpty = function(List)
             end
         end
     else
+        local tab = {}
         for n,t in pairs(Lists) do
             for w,p in pairs(t) do
                 if next(p) ~= nil then
-                    return false
+                    table.insert(tab,false)
+                else
+                    table.insert(tab,true)
                 end
             end
         end
+        return tab
     end
     return true
 end
@@ -1467,6 +1494,68 @@ Functions.RemovePlayerVanities = function(plr)
     end
 end
 
+Functions.IsGodded = function(player)
+    if not player:IsA("Model") and player.Character and player.Character:FindFirstChild("Humanoid") then
+        if player.Character:FindFirstChild("Humanoid").Health >= 100000000000 then
+            return true
+        end
+    elseif player:IsA("Model") and player:FindFirstChild("Humanoid") then
+        if player:FindFirstChild("Humanoid").Health >= 100000000000 then
+            return true
+        end
+    end
+    return false
+end
+
+Functions.ClosestPlayer = function()
+    local dist = math.huge
+	local target = nil
+	for i,v in pairs(game:GetService("Workspace"):GetChildren()) do
+		if Character and v ~= Character then
+			if v:FindFirstChild("Humanoid") and v:FindFirstChild(Variables.AimPart) then
+                if v.Humanoid:GetState() ~= Enum.HumanoidStateType.Dead and not v:FindFirstChild("ForceField") and v.Humanoid.Health >= 1 and (Variables.FireOnGodMode or not Functions.IsGodded(v)) then
+                    if not Functions.ListFind("Whitelist",v.Name) and Character:FindFirstChild(Variables.AimPart) then
+                        local Magnitude = (v:FindFirstChild(Variables.AimPart).Position - Character:FindFirstChild(Variables.AimPart).Position).Magnitude
+                        if Magnitude < dist then
+                            dist = Magnitude
+                            target = v
+                        end
+                    end
+                end
+			end
+		end
+	end
+	return target
+end
+
+Functions.GetTargetPlayer = function()
+    local Player = nil
+    if not Functions.ListEmpty("Targetlist") and Functions.ListPlayerInServer("Targetlist") then
+        for n,t in pairs(Lists.Targetlist) do
+            for w,p in pairs(t) do
+                if Players:FindFirstChild(p) then
+                    local v = Players:FindFirstChild(p)
+                    if v and v.Character and v.Character ~= Character and not Functions.ListFind("Whitelist",v.Name) and (Variables.FireOnGodMode or not Functions.IsGodded(v)) and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid:GetState() ~= Enum.HumanoidStateType.Dead and not v.Character:FindFirstChild("ForceField") and v.Character.Humanoid.Health > 0 then
+                        Player = v.Character
+                    end
+                end
+            end
+        end
+    elseif not Functions.ListEmpty("Blacklist") and Functions.ListPlayerInServer("Blacklist") then
+        for i,name in pairs(Lists.Blacklist) do
+            if Players:FindFirstChild(name) then
+                local v = Players:FindFirstChild(name)
+                if v and v.Character and v.Character ~= Character and not Functions.ListFind("Whitelist",v.Name) and (Variables.FireOnGodMode or not Functions.IsGodded(v)) and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid:GetState() ~= Enum.HumanoidStateType.Dead and not v.Character:FindFirstChild("ForceField") and v.Character.Humanoid.Health > 0 then
+                    Player = v.Character
+                end
+            end
+        end
+    elseif Functions.ClosestPlayer() then
+        Player = Functions.ClosestPlayer()
+    end
+    return Player
+end
+
 -- // Main Functions Below \\ --
 
 Functions.SaveSettings = function()
@@ -1499,6 +1588,53 @@ Functions.AutoExecute = function()
 end
 
 Functions.CreateMainTabs = function()
+
+    local function TouchedFuncs()
+
+        Functions.InitCharacterTouched(Players.LocalPlayer,"Local")
+    
+        Functions.CharacterAdded.CharacterTouched = function()
+            task.spawn(function()
+                Functions.InitCharacterTouched(Players.LocalPlayer,"Local")
+            end)
+        end
+
+        for i,v in pairs(Players:GetPlayers()) do
+            if Functions.ListFind("Whitelist",v.Name) then
+                Functions.InitCharacterTouched(v,"WL")
+                v.CharacterAdded:Connect(function()
+                    Functions.InitCharacterTouched(v,"WL")
+                end)
+            end
+            v.CharacterAdded:Connect(function()
+                for n,t in pairs(Lists) do
+                    if Functions.ListFind(n,v.Name,"Soft") then
+                        Functions.ListRemove(n,v.Name,"Soft")
+                    end
+                end
+            end)
+        end
+
+        Functions.PlayerAdded.WhitelistCharacterTouched = function(player)
+            if Functions.ListFind("Whitelist",player.Name) then
+                Functions.InitCharacterTouched(player,"WL")
+                player.CharacterAdded:Connect(function()
+                    Functions.InitCharacterTouched(player,"WL")
+                end)
+            end
+        end
+
+        Functions.PlayerAdded.SoftListRemoval = function(player)
+            player.CharacterAdded:Connect(function()
+                for n,t in pairs(Lists) do
+                    if Functions.ListFind(n,player.Name,"Soft") then
+                        Functions.ListRemove(n,player.Name,"Soft")
+                    end
+                end
+            end)
+        end
+
+    end
 
     local function TrainingTab()
 
@@ -2467,6 +2603,36 @@ Functions.CreateMainTabs = function()
             end
         end
 
+        ListsDropdowns:AddButton({
+            Title = "List Terms";
+            Callback = function()
+                MainWindow:Dialog({
+                    Title = "List Terms";
+                    Content = "Whitelist = Players you don't want to hurt.\nBlacklist = Players you want to hurt first but then move onto the rest.\nTargetlist = Players you ONLY want to hurt. Excludes the rest.\nBreakShurslist = Players you want to break the shurikens of.\nDisableShurslist = Players that disable the whole server's shurikens while they're in game.";
+                    Buttons = {
+                        Title = "Ok";
+                        Callback = function()
+                        end;
+                    }
+                })
+            end;
+        })
+
+        ListsDropdowns:AddButton({
+            Title = "Mode Terms";
+            Callback = function()
+                MainWindow:Dialog({
+                    Title = "List Terms";
+                    Content = "Soft = Unadds players from the list when they leave the game or when they spawn.\nSemi = Unadds players from the list only when they leave the game.\nNormal = Never unadds players unless manually unadded, however, it doesn't save when you leave the game.\nPermanent = Never unadds players unless manually unadded. Saves when you leave the game.";
+                    Buttons = {
+                        Title = "Ok";
+                        Callback = function()
+                        end;
+                    }
+                })
+            end;
+        })
+
         ListsDropdowns:AddDropdown("Multilist",{
             Title = "Soft Whitelist";
             Values = Functions.PlayersToStrings(Players:GetPlayers());
@@ -2658,8 +2824,237 @@ Functions.CreateMainTabs = function()
             return whitelistedPlayers[playerName] ~= nil
         end
 
+        local CombatButtons = Tabs.Combat:AddSection("Buttons")
+
+        CombatButtons:AddButton({
+            Title = "Main Respawn";
+            Description = "Respawns you manually to the main spawn area.";
+            Callback = function()
+                game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):WaitForChild("SpawnCharacterEvent"):FireServer("MainSpawn")
+            end
+        })
+
+        CombatButtons:AddButton({
+            Title = "Random Respawn";
+            Description = "Respawns you manually to a random spawn area.";
+            Callback = function()
+                game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):WaitForChild("SpawnCharacterEvent"):FireServer("RandomSpawn")
+            end
+        })
+
+        CombatButtons:AddButton({
+            Title = "Get Bubble";
+            Description = "Gets a bubble from the safe zone and teleports you back. You must have full health.";
+            Callback = function()
+                if Character and Character:FindFirstChild("Humanoid") and not Character:FindFirstChild("ForceField") and Character.Humanoid.Health == Character.Humanoid.MaxHealth then
+                    Character.Humanoid:UnequipTools()
+                    Functions.GetBubble()
+                end
+            end
+        })
+
+        local CombatToggles = Tabs.Combat:AddSection("Toggles")
+
+        AddVariables({["Aimbot"] = false, ["AimPart"] = "Head", ["FireOnGodMode"] = false})
+        CombatToggles:AddToggle("Aimbot",{
+            Title = "Aimbot";
+            Description = "Locks your camera onto the nearest player to you. Works best with shift lock or first person.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.Aimbot = true
+                    local aiming = false
+                    local CurrentCamera = workspace.CurrentCamera
+        
+                    Aimbotting = RunService.RenderStepped:Connect(function()
+                        if aiming then
+                            if Functions.GetTargetPlayer() ~= nil then
+                                local plr = Functions.GetTargetPlayer()
+                                CurrentCamera.CFrame = CFrame.new(CurrentCamera.CFrame.Position,plr:FindFirstChild(Variables.AimPart).Position)
+                            end
+                        end
+                    end)
+        
+                    Functions.UserInputBegan.Aimbot = function(inp)
+                        if inp.UserInputType == Enum.UserInputType.MouseButton2 and Variables.Aimbot == true then
+                            aiming = true
+                        end
+                    end
+        
+                    Functions.UserInputEnded.UnAimbot = function(inp)
+                        if inp.UserInputType == Enum.UserInputType.MouseButton2 and Variables.Aimbot == true then
+                            aiming = false
+                        end
+                    end
+                else
+                    pcall(function()
+                        Variables.Aimbot = false
+                        Functions.UserInputBegan.Aimbotting = nil
+                        Functions.UserInputEnded.UnAimbotting = nil
+                        Aimbotting:Disconnect()
+                    end)
+                end
+            end
+        })
+
+        AddVariables({["SilentAim"] = false, ["FilterList"] = {}, ["ShotgunFire"] = false, ["AirStrikeMode"] = false, ["TeleportShuriken"] = false, ["RapidMode"] = false, ["RapidMultiplier"] = 10})
+        CombatToggles:AddToggle("SilentAim",{
+            Title = "Silent Aim";
+            Description = "Moves your shuriken to a speficied player after you shoot it. There are different modes as well.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.SilentAim = true
+    
+                    for i,v in pairs(game.Workspace:GetDescendants()) do
+                        if v:FindFirstAncestorOfClass("Model") and not Players:GetPlayerFromCharacter(v:FindFirstAncestorOfClass("Model")) then
+                            if v:IsA("BasePart") or v:IsA("MeshPart") or v:IsA("Part") then
+                                if v.CanCollide == false or v.CanTouch == false and not table.find(Variables.FilterList,v) then
+                                    table.insert(Variables.FilterList,v)
+                                end
+                            end
+                        end
+                    end
+    
+                    Functions.WorkspaceDescendantAdded.SilentAim = function(child)
+                        if child:FindFirstAncestorOfClass("Model") and not Players:GetPlayerFromCharacter(child:FindFirstAncestorOfClass("Model")) then
+                            if child:IsA("BasePart") or child:IsA("MeshPart") or child:IsA("Part") then
+                                if (child.CanCollide == false or child.CanTouch == false) and not table.find(Variables.FilterList,child) then
+                                    table.insert(Variables.FilterList,child)
+                                end
+                            end
+                        end
+                        if child.Name == "ThrownKunai" then
+                            if child:WaitForChild("creator").Value == Players.LocalPlayer and Variables.SilentAim then
+                                task.spawn(function()
+                                    local proximity = false
+                                    local fixedspeed = nil
+                                    local count = 0
+                                    local raycastParams = RaycastParams.new()
+                                    raycastParams.FilterDescendantsInstances = Variables.FilterList
+                                    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+                                    raycastParams.IgnoreWater = false
+                                    if Variables.ShotgunFire then
+                                        local number = math.random(150,250)
+                                        task.wait(number / 1000)
+                                    end
+                                    child.Touched:Connect(function(tpart)
+                                        if tpart:FindFirstAncestorOfClass("Model") and Players:GetPlayerFromCharacter(tpart:FindFirstAncestorOfClass("Model")) then
+                                            local char = tpart:FindFirstAncestorOfClass("Model")
+                                            if char:FindFirstChild("Head") and char.Head:FindFirstChild("DamageBBGui") then
+                                                child:Destroy()
+                                            end
+                                        end
+                                    end)
+                                    while child.Parent == workspace and Variables.SilentAim do
+                                        local Player = Functions.GetTargetPlayer()
+                                        if Variables.AirStrikeMode and not Variables.ShotgunFire and count == 0 and Character and Functions.GetRoot(Character) then
+                                            task.wait()
+                                            local c = 0
+                                            local root = Functions.GetRoot(Character)
+                                            repeat
+                                                if root then
+                                                    child.CFrame = CFrame.new(root.Position.X, root.Position.Y + 300, root.Position.Z)
+                                                end
+                                                c += 1
+                                            until c == 5
+                                        end
+                                        if Player then
+                                            local ray = workspace:Raycast(child.Position, child.CFrame.LookVector * 15, raycastParams)
+                                            local victimAP = Player:FindFirstChild(Variables.AimPart)
+                                            local localAP = nil
+                                            if Character then
+                                                localAP = Character:FindFirstChild(Variables.AimPart)
+                                            end
+                                            local bv = child:WaitForChild("BodyVelocity")
+                                            if (ray or proximity or Variables.TeleportShuriken) and victimAP then
+                                                if not proximity then
+                                                    proximity = true
+                                                end
+                                                child.CFrame = victimAP.CFrame
+                                                bv.Velocity = Vector3.new(0,0,0)
+                                            elseif not proximity and victimAP then
+                                                if (victimAP.Position - child.Position).Magnitude > 1000 then
+                                                    if not fixedspeed then
+                                                        fixedspeed = math.floor(((victimAP.Position - child.Position).Magnitude * 5) + 700)
+                                                    end
+                                                    bv.Velocity = CFrame.new(child.Position,victimAP.Position).LookVector * fixedspeed
+                                                elseif Variables.RapidMode then
+                                                    bv.Velocity = CFrame.new(child.Position,victimAP.Position).LookVector * (700 * Variables.RapidMultiplier)
+                                                else
+                                                    if localAP and not Variables.AirStrikeMode and (victimAP.Position - localAP.Position).Magnitude <= 80 then
+                                                        bv.Velocity = CFrame.new(child.Position,victimAP.Position).LookVector * 300
+                                                    else
+                                                        bv.Velocity = CFrame.new(child.Position,victimAP.Position).LookVector * 700
+                                                    end
+                                                end
+                                                child.CFrame = CFrame.new(child.Position,victimAP.Position)
+                                            end
+                                        end
+                                        count += 1
+                                        task.wait()
+                                    end
+                                end)
+                            end
+                        end
+                    end
+    
+                    Functions.WorkspaceDescendantRemoved.SilentAim = function(child)
+                        if table.find(Variables.FilterList,child) then
+                            table.remove(Variables.FilterList,table.find(Variables.FilterList,child))
+                        end
+                    end
+                else
+                    pcall(function()
+                        Variables.SilentAim = false
+                        Functions.WorkspaceDescendantAdded.SilentAim = nil
+                        Functions.WorkspaceDescendantRemoved.SilentAim = nil
+                        table.clear(Variables.FilterList)
+                    end)
+                end
+            end;
+        })
+
+        AddVariables({["Loopbring"] = false, ["LoopBringDistance"] = 7})
+        CombatToggles:AddToggle("Loopbring",{
+            Title = "Loop Bring";
+            Description = "Constantly brings targetted players to your character so you can hit them with your sword.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.Loopbring = false
+                    task.wait()
+                    Variables.Loopbring = true
+                    task.spawn(function()
+                        while Variables.Loopbring do
+                            for n,t in pairs(Lists['Targetlist']) do
+                                for w,p in pairs(t) do
+                                    if (table.find(WLPunishment,p) or not Functions.ListFind("Whitelist",p)) then
+                                        local victim = Players:FindFirstChild(p)
+                                        if victim and victim.Character and Functions.GetRoot(victim.Character) and Players.LocalPlayer.Character and Functions.GetRoot(Players.LocalPlayer.Character) and not victim.Character:FindFirstChildWhichIsA("ForceField") then
+                                            if Character:FindFirstChild("Sword") and Character:FindFirstChild("Sword"):FindFirstChild("Handle") then
+                                                Functions.GetRoot(victim.Character).CFrame = CFrame.new(Character:FindFirstChild("Sword"):FindFirstChild("Handle").Position, Functions.GetRoot(victim.Character).Position + Functions.GetRoot(Character).CFrame.LookVector * 5) + Functions.GetRoot(Character).CFrame.LookVector * 3
+                                            else
+                                                Functions.GetRoot(victim.Character).CFrame = Functions.GetRoot(Players.LocalPlayer.Character).CFrame + Vector3.new(Variables.LoopBringDistance,1,0)
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                            task.wait()
+                        end
+                    end)
+                else
+                    pcall(function()
+                        Variables.Loopbring = false
+                    end)
+                end
+            end;
+        })
+
     end
 
+    TouchedFuncs()
     TrainingTab()
     ListsTab()
     PlayersTab()
@@ -2684,6 +3079,22 @@ Functions.StartMainConnections = function()
             v(char)
         end
         Variables.CharRespawning = false
+    end)
+
+    UserInputService.InputBegan:Connect(function(input,processed)
+        if not processed then
+            for _,v in pairs(Functions.UserInputBegan) do
+                v(input)
+            end
+        end
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input,processed)
+        if not processed then
+            for _,v in pairs(Functions.UserInputEnded) do
+                v(input)
+            end
+        end
     end)
     
     Players.PlayerAdded:Connect(function(player)
@@ -2710,6 +3121,18 @@ Functions.StartMainConnections = function()
         Functions.RemovePlayerVanities(player)
         for _,v in pairs(Functions.PlayerRemoved) do
             v(player)
+        end
+    end)
+
+    Workspace.DescendantAdded:Connect(function(child)
+        for _,v in pairs(Functions.WorkspaceDescendantAdded) do
+            v(child)
+        end
+    end)
+    
+    Workspace.DescendantRemoving:Connect(function(child)
+        for _,v in pairs(Functions.WorkspaceDescendantRemoved) do
+            v(child)
         end
     end)
 
