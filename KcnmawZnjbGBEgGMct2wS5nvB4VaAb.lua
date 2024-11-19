@@ -2610,10 +2610,17 @@ Functions.CreateMainTabs = function()
                     Title = "List Terms";
                     Content = "Whitelist = Players you don't want to hurt.\nBlacklist = Players you want to hurt first but then move onto the rest.\nTargetlist = Players you ONLY want to hurt. Excludes the rest.\nBreakShurslist = Players you want to break the shurikens of.\nDisableShurslist = Players that disable the whole server's shurikens while they're in game.";
                     Buttons = {
-                        Title = "Ok";
-                        Callback = function()
-                        end;
-                    }
+                        {
+                            Title = "Confirm",
+                            Callback = function()
+                            end
+                        },
+                        {
+                            Title = "Cancel",
+                            Callback = function()
+                            end
+                        }
+                    };
                 })
             end;
         })
@@ -2625,10 +2632,17 @@ Functions.CreateMainTabs = function()
                     Title = "List Terms";
                     Content = "Soft = Unadds players from the list when they leave the game or when they spawn.\nSemi = Unadds players from the list only when they leave the game.\nNormal = Never unadds players unless manually unadded, however, it doesn't save when you leave the game.\nPermanent = Never unadds players unless manually unadded. Saves when you leave the game.";
                     Buttons = {
-                        Title = "Ok";
-                        Callback = function()
-                        end;
-                    }
+                        {
+                            Title = "Confirm",
+                            Callback = function()
+                            end
+                        },
+                        {
+                            Title = "Cancel",
+                            Callback = function()
+                            end
+                        }
+                    };
                 })
             end;
         })
