@@ -16,7 +16,8 @@ local TeleportService = cloneref(game:GetService("TeleportService"))
 local TweenService = cloneref(game:GetService("TweenService"))
 local Lighting = cloneref(game:GetService("Lighting"))
 
-local Character = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
+local Player = Players.LocalPlayer
+local Character = Player.Character or Player.CharacterAdded:Wait()
 local Options = Fluent.Options
 local Variables = {}
 local Functions = {}
@@ -609,7 +610,7 @@ local AutoExecuteFuncs = {
     end;
     AntiMobileGlitch = function()
         task.spawn(function()
-            for i,v in pairs(Player.PlayerGui:GetChildren()) do
+            for i,v in pairs(Players.LocalPlayer.PlayerGui:GetChildren()) do
                 if v.Name == "ScreenGui" and v:FindFirstChild("Frame") then
                     v:Destroy()
                 end
