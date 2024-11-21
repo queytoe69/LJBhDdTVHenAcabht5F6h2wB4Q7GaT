@@ -34,6 +34,7 @@ Functions.WorkspaceDescendantRemoved = {}
 
 local Constants = {
     BodyParts = {"Head","HumanoidRootPart","UpperTorso","LowerTorso","RightUpperArm","LeftUpperArm","RightLowerArm","LeftLowerArm","RightHand","LeftHand","RightUpperLeg","LeftUpperLeg","RightLowerLeg","LeftLowerLeg","RightFoot", "LeftFoot"};
+    Modes = {'Soft', 'Semi', 'Normal', 'Permanent'};
 }
 
 local Lists = {
@@ -647,8 +648,8 @@ local AutoExecuteFuncs = {
     AutoTranslator = function()
         --[[
             Message Translator
-            Made by Aim, updated by evn
-            Credits to Riptxde for the sending chathook
+            NOT Made by Aim, NOT updated by evn
+            ZERO Credits to Riptxde for the sending chathook
         --]]
 
         if not game['Loaded'] then game['Loaded']:Wait() end; repeat wait(.06) until game:GetService('Players').LocalPlayer ~= nil
@@ -1268,14 +1269,14 @@ local MainWindow =
 
 local Tabs = {
     Main = MainWindow:AddTab({Title = "Main", Icon = "house"}),
-    Settings = MainWindow:AddTab({Title = "Settings", Icon = "settings"}),
     Training = MainWindow:AddTab({ Title = "Training", Icon = "axe" }),
     Lists = MainWindow:AddTab({ Title = "Lists", Icon = "scroll" }),
     Players = MainWindow:AddTab({ Title = "Players", Icon = "user-cog" }),
     Combat = MainWindow:AddTab({Title = "Combat", Icon = "swords"}),
-    Misc = MainWindow:AddTab({Title = "Miscellaneous", Icon = "folder-plus"}),
     Cosmetics = MainWindow:AddTab({Title = "Cosmetics", Icon = "shirt"}),
-    Credits = MainWindow:AddTab({Title = "Credits", Icon = "link-2"})
+    Misc = MainWindow:AddTab({Title = "Miscellaneous", Icon = "folder-plus"}),
+    Credits = MainWindow:AddTab({Title = "Credits", Icon = "link-2"}),
+    Settings = MainWindow:AddTab({Title = "Settings", Icon = "settings"})
 }
 
 local function AddVariables(Tab)
@@ -2608,7 +2609,7 @@ Functions.CreateMainTabs = function()
             Callback = function()
                 MainWindow:Dialog({
                     Title = "List Terms";
-                    Content = "Whitelist = Players you don't want to hurt.\nBlacklist = Players you want to hurt first but then move onto the rest.\nTargetlist = Players you ONLY want to hurt. Excludes the rest.\nBreakShurslist = Players you want to break the shurikens of.\nDisableShurslist = Players that disable the whole server's shurikens while they're in game.";
+                    Content = "- Whitelist = Players you don't want to hurt.\n\n- Blacklist = Players you want to hurt first but then move onto the rest.\n\n- Targetlist = Players you ONLY want to hurt. Excludes the rest.\n\n- BreakShurslist = Players you want to break the shurikens of.\n\n- DisableShurslist = Players that disable the whole server's shurikens while they're in game.";
                     Buttons = {
                         {
                             Title = "Confirm",
@@ -2630,7 +2631,7 @@ Functions.CreateMainTabs = function()
             Callback = function()
                 MainWindow:Dialog({
                     Title = "List Terms";
-                    Content = "Soft = Unadds players from the list when they leave the game or when they spawn.\nSemi = Unadds players from the list only when they leave the game.\nNormal = Never unadds players unless manually unadded, however, it doesn't save when you leave the game.\nPermanent = Never unadds players unless manually unadded. Saves when you leave the game.";
+                    Content = "- Soft = Unadds players from the list when they leave the game or when they spawn.\n\n- Semi = Unadds players from the list only when they leave the game.\n\n- Normal = Never unadds players unless manually unadded, however, it doesn't save when you leave the game.\n\n- Permanent = Never unadds players unless manually unadded. Saves when you leave the game.";
                     Buttons = {
                         {
                             Title = "Confirm",
@@ -3043,7 +3044,7 @@ Functions.CreateMainTabs = function()
                         while Variables.Loopbring do
                             for n,t in pairs(Lists['Targetlist']) do
                                 for w,p in pairs(t) do
-                                    if (table.find(WLPunishment,p) or not Functions.ListFind("Whitelist",p)) then
+                                    if not Functions.ListFind("Whitelist",p) then
                                         local victim = Players:FindFirstChild(p)
                                         if victim and victim.Character and Functions.GetRoot(victim.Character) and Players.LocalPlayer.Character and Functions.GetRoot(Players.LocalPlayer.Character) and not victim.Character:FindFirstChildWhichIsA("ForceField") then
                                             if Character:FindFirstChild("Sword") and Character:FindFirstChild("Sword"):FindFirstChild("Handle") then
@@ -3063,6 +3064,420 @@ Functions.CreateMainTabs = function()
                         Variables.Loopbring = false
                     end)
                 end
+            end;
+        })
+
+        AddVariables({["PredictMode"] = false, ["PredictModeOffset"] = 0.05})
+        CombatToggles:AddToggle("PredictBot",{
+            Title = "Predict Bot";
+            Description = "Predicts a player's movements and creates a part that the bot predicts will be the player's position in 3 seconds.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.PredictMode = true
+                    local speedpart = workspace:FindFirstChild("SPEEDPART")
+                    if not speedpart then
+                        speedpart = Instance.new("Part",workspace)
+                        speedpart.Name = "SPEEDPART"
+                        speedpart.Size = Vector3.new(1,1,1)
+                        speedpart.Material = Enum.Material.Neon
+                        speedpart.Anchored = true
+                        speedpart.CanCollide = false
+                    end
+                    coroutine.resume(coroutine.create(function()
+                        while Variables.PredictMode do
+                            local predictplr = Functions.GetTargetPlayer()
+                            if predictplr and predictplr:FindFirstChild("Humanoid") and predictplr:FindFirstChild(Variables.AimPart) and Character and Functions.GetRoot(Character) then
+                                local speed = 300
+                                local dist = (predictplr:FindFirstChild(Variables.AimPart).Position - Functions.GetRoot(Character).Position).Magnitude
+                                local time = dist / speed
+                                local increase = predictplr:FindFirstChild(Variables.AimPart).Velocity.Magnitude * (time + 0.01 + Variables.PredictModeOffset)
+                                speedpart.Position = Vector3.new(predictplr:FindFirstChild(Variables.AimPart).Position.X + (predictplr:FindFirstChild("Humanoid").MoveDirection.X * increase), predictplr:FindFirstChild(Variables.AimPart).Position.Y + (predictplr:FindFirstChild("Humanoid").MoveDirection.Y * increase), predictplr:FindFirstChild(Variables.AimPart).Position.Z + (predictplr:FindFirstChild("Humanoid").MoveDirection.Z * increase))
+                            end
+                            task.wait()
+                        end
+                    end))
+                else
+                    pcall(function()
+                        Variables.PredictMode = false
+                        workspace:FindFirstChild("SPEEDPART"):Destroy()
+                    end)
+                end
+            end
+        })
+
+        AddVariables({["AutoBubble"] = false, ["AltAutoBubble"] = false})
+        CombatToggles:AddToggle("AutoBubble",{
+            Title = "Auto Bubble";
+            Description = "Automatically puts you in a bubble whenever you lose it. Can be configured in settings.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.AutoBubble = true
+                    while Variables.AutoBubble do
+                        if Character and Character:FindFirstChild("Humanoid") and not Character:FindFirstChild("ForceField") and Character.Humanoid.Health == Character.Humanoid.MaxHealth then
+                            if not Variables.AltAutoBubble then
+                                Character.Humanoid:UnequipTools()
+                                Functions.GetBubble()
+                            else
+                                if not Character:FindFirstChild("Sword") and not Character:FindFirstChild("Shuriken") and not Character:FindFirstChild("ForceField") then
+                                    Functions.GetBubble()
+                                end
+                            end
+                        end
+                        task.wait()
+                    end
+                else
+                    Variables.AutoBubble = false
+                end
+            end;
+        })
+
+        AddVariables({["AutoTarget"] = false, ["AutoTargetMode"] = {['Soft'] = true; ['Semi'] = false; ['Normal'] = false; ['Permanent'] = false;}})
+        CombatToggles:AddToggle("AutoTarget",{
+            Title = "Auto Target";
+            Description = "Automatically adds players to a set targetlist when they hit you. Can be configured in settings.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.AutoTarget = true
+                    Functions.CharacterTouched.AutoTargetting = function(child)
+                        if Variables.AutoTarget then
+                            for Mode, State in pairs(Variables.AutoTargetMode) do
+                                if State then
+                                    if child.Name == "ThrownKunai" then
+                                        if not child:FindFirstChild("creator") then
+                                            repeat task.wait() until child:FindFirstChild("creator")
+                                        end
+                                        if Variables.AutoTarget and State and child:FindFirstChild("creator").Value ~= Players.LocalPlayer and not Functions.ListFind("Targetlist",child.creator.Value.Name,Mode) and not Functions.ListFind("Whitelist",child.creator.Value.Name) and (Variables.FireOnGodMode or not Functions.IsGodded(child.creator.Value)) then
+                                            Functions.ListInsert("Targetlist", child.creator.Value.Name, Mode)
+                                        end
+                                    elseif child.Parent.Name == "Sword" then
+                                        if Variables.AutoTarget and State and child.Parent.Parent.Name ~= Players.LocalPlayer.Name and not Functions.ListFind("Targetlist",child.Parent.Parent.Name,Mode) and not Functions.ListFind("Whitelist",child.Parent.Parent.Name) and (Variables.FireOnGodMode or not Functions.IsGodded(Players:FindFirstChild(child.Parent.Parent.Name))) then
+                                            Functions.ListInsert("Targetlist", child.Parent.Parent.Name, Mode)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                else
+                    pcall(function()
+                        Variables.AutoTarget = false
+                        Functions.CharacterTouched.AutoTargetting = nil
+                    end)
+                end
+            end;
+        })
+
+        AddVariables({["AutoWLTarget"] = false})
+        CombatToggles:AddToggle("AutoWhitelistTarget",{
+            Title = "Auto Whitelist Target";
+            Description = "Automatically adds players to a set targetlist when they hit anyone on the whitelist. Can be configured in settings.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.AutoWLTarget = true
+                    Functions.WhitelistCharacterTouched.AutoWhitelistTargetting = function(child,wlplr)
+                        if Variables.AutoWLTarget and Functions.ListFind("Whitelist",wlplr.Name) then
+                            for Mode, State in pairs(Variables.AutoTargetMode) do
+                                if State then
+                                    if child.Name == "ThrownKunai" then
+                                        if not child:FindFirstChild("creator") then
+                                            repeat task.wait() until child:FindFirstChild("creator")
+                                        end
+                                        if Variables.AutoWLTarget and State and child:FindFirstChild("creator").Value ~= Players.LocalPlayer and not Functions.ListFind("Targetlist",child.creator.Value.Name,Mode) and not Functions.ListFind("Whitelist",child.creator.Value.Name) and (Variables.FireOnGodMode or not Functions.IsGodded(child.creator.Value)) then
+                                            Functions.ListInsert("Targetlist", child.creator.Value.Name, Mode)
+                                        end
+                                    elseif child.Parent.Name == "Sword" then
+                                        if Variables.AutoWLTarget and State and child.Parent.Parent.Name ~= Players.LocalPlayer.Name and not Functions.ListFind("Targetlist",child.Parent.Parent.Name,Mode) and not Functions.ListFind("Whitelist",child.Parent.Parent.Name) and (Variables.FireOnGodMode or not Functions.IsGodded(Players:FindFirstChild(child.Parent.Parent.Name))) then
+                                            Functions.ListInsert("Targetlist", child.Parent.Parent.Name, Mode)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                else
+                    pcall(function()
+                        Variables.AutoWLTarget = false
+                        Functions.WhitelistCharacterTouched.AutoWhitelistTargetting = nil
+                    end)
+                end
+            end
+        })
+
+        AddVariables({["Savior"] = false, ["SaviorPercent"] = 0.5})
+        CombatToggles:AddToggle("Savior",{
+            Title = "Savior";
+            Description = "Saves you and your rep by resetting you at a certain health so the other player doesn't get a kill.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.Savior = true
+                    local function HPChanged(health)
+                        if Variables.Savior and health <= (Character:FindFirstChild("Humanoid").MaxHealth * Variables.SaviorPercent) then
+                            Character:FindFirstChild("Humanoid").Health = 0
+                        end
+                    end
+    
+                    hpchanging = Character:WaitForChild("Humanoid",math.huge).HealthChanged:Connect(HPChanged)
+    
+                    Functions.CharacterAdded.Savior = function()
+                        hpchanging = Character:WaitForChild("Humanoid",math.huge).HealthChanged:Connect(HPChanged)
+                    end
+                else
+                    pcall(function()
+                        Variables.Savior = false
+                        Functions.CharacterAdded.Savior = nil
+                        hpchanging:Disconnect()
+                    end)
+                end
+            end
+    
+        })
+
+        AddVariables({["BreakShurs"] = false})
+        CombatToggles:AddToggle("BreakShurikens",{
+            Title = "Break Shurikens";
+            Description = "Breaks everyones shurikens that are in the BreakShurlist.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.BreakShurs = false
+                    task.wait(0.03)
+                    Variables.BreakShurs = true
+                    task.spawn(function()
+                        while Variables.BreakShurs do
+                            for n,t in pairs(Lists.BreakShurlist) do
+                                for w,p in pairs(t) do
+                                    if Players:FindFirstChild(p) then
+                                        local v = Players:FindFirstChild(p)
+                                        pcall(function()
+                                            for i,v in pairs(v.Backpack:GetChildren()) do
+                                                if v.Name == "Shuriken" and v:FindFirstChild("HitEvent") then
+                                                    v:FindFirstChild("HitEvent"):FireServer(Vector2.new())
+                                                end
+                                            end
+                                            for i,v in pairs(v.Character:GetChildren()) do
+                                                if v.Name == "Shuriken" and v:FindFirstChild("HitEvent") then
+                                                    v:FindFirstChild("HitEvent"):FireServer(Vector2.new())
+                                                end
+                                            end
+                                        end)
+                                    end
+                                end
+                            end
+                            task.wait(0.1)
+                        end
+                    end)
+                else
+                    Variables.BreakShurs = false
+                end
+            end
+        })
+    
+        AddVariables({["DisableShurs"] = false})
+        CombatToggles:AddToggle("DisableShurikens",{
+            Title = "Disable Shurikens";
+            Description = "Disables the shurikens of the entire server when a player in the DisableShurslist is in the game.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.DisableShurs = false
+                    task.wait(0.03)
+                    Variables.DisableShurs = true
+                    task.spawn(function()
+                        while Variables.DisableShurs do
+                            if Functions.ListPlayerInServer("DisableShurslist") then
+                                for i,v in pairs(Players:GetPlayers()) do
+                                    pcall(function()
+                                        for i,v in pairs(v.Backpack:GetChildren()) do
+                                            if v.Name == "Shuriken" and v:FindFirstChild("HitEvent") then
+                                                v:FindFirstChild("HitEvent"):FireServer(Vector2.new())
+                                            end
+                                        end
+                                        for i,v in pairs(v.Character:GetChildren()) do
+                                            if v.Name == "Shuriken" and v:FindFirstChild("HitEvent") then
+                                                v:FindFirstChild("HitEvent"):FireServer(Vector2.new())
+                                            end
+                                        end
+                                    end)
+                                end
+                            end
+                            task.wait(0.1)
+                        end
+                    end)
+                else
+                    Variables.DisableShurs = false
+                end
+            end;
+        })
+
+        AddVariables({["AutoBreakShurs"] = false, ["AutoBreakShurikensMode"] = {['Soft'] = true; ['Semi'] = false; ['Normal'] = false; ['Permanent'] = false;}})
+        CombatToggles:AddToggle("AutoBreakShurikens",{
+            Title = "Auto Break Shurikens";
+            Description = "Automatically breaks the shurikens of players that hit you.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.AutoBreakShurs = true
+                    coroutine.resume(coroutine.create(function()
+                        while Variables.AutoBreakShurs do
+                            for i,v in pairs(Players:GetPlayers()) do
+                                if v:FindFirstChild("leaderstats") and v.leaderstats:FindFirstChild("Ninjutsu") and not Functions.ListFind("Whitelist",v.Name) and not Functions.ListFind("BreakShurlist",v.Name,"Normal") then
+                                    if v.leaderstats.Ninjutsu.Value < 0 then
+                                        Functions.ListInsert("BreakShurlist",v.Name,"Normal")
+                                    end
+                                end
+                            end
+                            task.wait(0.1)
+                        end
+                    end))
+        
+                    Functions.CharacterTouched.AutoBreakShurikens = function(child)
+                        if Variables.AutoBreakShurs then
+                            for Mode, State in pairs(Variables.AutoBreakShurikensMode) do
+                                if State then
+                                    if child.Name == "ThrownKunai" then
+                                        if not child:FindFirstChild("creator") then
+                                            repeat task.wait() until child:FindFirstChild("creator")
+                                        end
+                                        if Variables.AutoBreakShurs and State and child:FindFirstChild("creator").Value ~= Players.LocalPlayer and not Functions.ListFind("BreakShurlist",child.creator.Value.Name,Mode) and not Functions.ListFind("Whitelist",child.creator.Value.Name) then
+                                            Functions.ListInsert("BreakShurlist", child.creator.Value.Name, Mode)
+                                        end
+                                    elseif child.Parent.Name == "Sword" then
+                                        if Variables.AutoBreakShurs and State and child.Parent.Parent.Name ~= Players.LocalPlayer.Name and not Functions.ListFind("BreakShurlist",child.Parent.Parent.Name,Mode) and not Functions.ListFind("Whitelist",child.Parent.Parent.Name) then
+                                            Functions.ListInsert("BreakShurlist", child.Parent.Parent.Name, Mode)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                else
+                    pcall(function()
+                        Variables.AutoBreakShurs = false
+                        Functions.CharacterTouched.AutoBreakShurikens = nil
+                    end)
+                end
+            end;
+        })
+
+        local CombatSettings = Tabs.Combat:AddSection("Settings")
+
+        CombatSettings:AddDropdown("AutoTargetMode",{
+            Title = "Auto Target Mode";
+            Description = "Mode that Auto Target uses.";
+            Values = Constants.Modes;
+            Multi = false;
+            Default = "Soft";
+        })
+
+        Options.AutoTargetMode:OnChanged(function(Value)
+            for i,_ in pairs(Variables.AutoTargetMode) do
+                Variables.AutoTargetMode[i] = false
+            end
+            Variables.AutoTargetMode[Value] = true
+        end)
+
+        CombatSettings:AddToggle("AirStrikeMode",{
+            Title = "Airstrike Mode";
+            Description = "Enables airstrike mode. This forces shurikens to go up into the air and rain down on players when shot.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.AirStrikeMode = true
+                else
+                    Variables.AirStrikeMode = false
+                end
+            end;
+        })
+    
+        CombatSettings:AddToggle("TeleportShuriken",{
+            Title = "Teleport Shuriken";
+            Description = "Skips moving the shuriken to the player's hitpart and instead teleports it directly to them.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.TeleportShuriken = true
+                else
+                    Variables.TeleportShuriken = false
+                end
+            end;
+        })
+
+        CombatSettings:AddToggle("FireOnGodMode",{
+            Title = "Fire On Godded Players";
+            Description = "Allows auto fire and silent aim to fire shurikens even when the player it's firing at is godded.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.FireOnGodMode = true
+                else
+                    Variables.FireOnGodMode = false
+                end
+            end
+        })
+
+        CombatSettings:AddToggle("AltAutoBubble",{
+            Title = "Alternate Auto Bubble";
+            Description = "Alternate mode of auto bubble that allows you to take weapons out.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.AltAutoBubble = true
+                else
+                    Variables.AltAutoBubble = false
+                end
+            end
+        })
+
+        CombatSettings:AddInput("AirStrikeDistance",{
+            Title = "Air Strike Distance";
+            Description = "Congifure air strike distance.";
+            Default = Variables.AirStrikeDistance;
+            Placeholder = "Enter a number..";
+            Numeric = true;
+            Finished = true;
+            Callback = function(Value)
+                Variables.AirStrikeDistance = tonumber(Value)
+            end;
+        })
+
+        CombatSettings:AddInput("LoopbringDistance",{
+            Title = "Loop Bring Distance";
+            Description = "Configure loop bring distance.";
+            Default = Variables.loopBringDistance;
+            Placeholder = "Enter a number..";
+            Numeric = true;
+            Finished = true;
+            Callback = function(Value)
+                Variables.loopBringDistance = tonumber(Value)
+            end;
+        })
+
+        CombatSettings:AddInput("SaviorPercent",{
+            Title = "Savior Health Percent";
+            Description = "Configure savior percent";
+            Default = Variables.SaviorPercent;
+            Placeholder = "Enter a number..";
+            Numeric = true;
+            Finished = true;
+            Callback = function(Value)
+                Variables.SaviorPercent = tonumber(Value)
+            end
+        })
+
+        CombatSettings:AddInput("PredictModeOffset",{
+            Title = "Predict Mode Offset";
+            Description = "Configure predict mode offset";
+            Default = Variables.PredictModeOffset;
+            Placeholder = "Enter a number..";
+            Numeric = true;
+            Finished = true;
+            Callback = function(Value)
+                Variables.PredictModeOffset = tonumber(Value)
             end;
         })
 
