@@ -1254,6 +1254,233 @@ local AutoExecuteFuncs = {
     end;
 }
 
+local TableFuncs = {
+    ["AutoFire"] = {
+
+        --[[ 
+            0 = false, 1 = true
+            1st = AirStrikeMode, 2nd = PredictMode, 3rd = ServerShurikens, 4th = ShotgunFire
+        --]]
+
+        ["0000"] = function()
+            if Character and Character:FindFirstChild("Shuriken") then
+                for i,v in pairs(Character:GetChildren()) do
+                    if v.Name == "Shuriken" and targetplr and targetplr.Character and targetplr.Character:FindFirstChild(Variables.AimPart) then
+                        v:FindFirstChild("HitEvent"):FireServer(targetplr.Character:FindFirstChild(Variables.AimPart).Position)
+                    end
+                end
+            end
+            if Variables.OptionalEquip then
+                for i,v in pairs(Players.LocalPlayer.Backpack:GetChildren()) do
+                    if v.Name == "Shuriken" and targetplr and targetplr.Character and targetplr.Character:FindFirstChild(Variables.AimPart) then
+                        v:FindFirstChild("HitEvent"):FireServer(targetplr.Character:FindFirstChild(Variables.AimPart).Position)
+                    end
+                end
+            end
+        end;
+        ["1000"] = function()
+            if Character and Character:FindFirstChild("Shuriken") and Functions.GetRoot(Character) then
+                local hrp = Functions.GetRoot(Character)
+                for i,v in pairs(Character:GetChildren()) do
+                    if v.Name == "Shuriken" then
+                        v:FindFirstChild("HitEvent"):FireServer(Vector3.new(hrp.Position.X, hrp.Position.Y + Variables.AirStrikeDistance, hrp.Position.Z))
+                    end
+                end
+            elseif Character and Functions.GetRoot(Character) then
+                if Variables.OptionalEquip then
+                    local hrp = Functions.GetRoot(Character)
+                    for i,v in pairs(Players.LocalPlayer.Backpack:GetChildren()) do
+                        if v.Name == "Shuriken" then
+                            v:FindFirstChild("HitEvent"):FireServer(Vector3.new(hrp.Position.X, hrp.Position.Y + Variables.AirStrikeDistance, hrp.Position.Z))
+                        end
+                    end
+                end
+            end
+        end;
+        ["0010"] = function()
+            for i,v in pairs(Players:GetPlayers()) do
+                if (Variables.PlayerShurikenCheck and v ~= targetplr) or (not Variables.PlayerShurikenCheck) then
+                    if v:FindFirstChild("Backpack") and v.Backpack:FindFirstChild("Shuriken") then
+                        for i,v in pairs(v.Backpack:GetChildren()) do
+                            if v.Name == "Shuriken" and v:FindFirstChild("HitEvent") and targetplr and targetplr.Character and targetplr.Character:FindFirstChild(Variables.AimPart) then
+                                v.HitEvent:FireServer(targetplr.Character:FindFirstChild(Variables.AimPart).Position)
+                                Step()
+                            end
+                        end
+                    end
+                    if v.Character and v.Character:FindFirstChild("Shuriken") then
+                        for i,v in pairs(v.Character:GetChildren()) do
+                            if v.Name == "Shuriken" and v:FindFirstChild("HitEvent") and targetplr and targetplr.Character and targetplr.Character:FindFirstChild(Variables.AimPart) then
+                                v.HitEvent:FireServer(targetplr.Character:FindFirstChild(Variables.AimPart).Position)
+                                Step()
+                            end
+                        end
+                    end
+                end
+            end
+        end;
+        ["1010"] = function()
+            if Character and Functions.GetRoot(Character) then
+                local hrp = Functions.GetRoot(Character)
+                for i,v in pairs(Players:GetPlayers()) do
+                    if (Variables.PlayerShurikenCheck and v ~= targetplr) or (not Variables.PlayerShurikenCheck) then
+                        if v:FindFirstChild("Backpack") and v.Backpack:FindFirstChild("Shuriken") then
+                            for i,v in pairs(v.Backpack:GetChildren()) do
+                                if v.Name == "Shuriken" and v:FindFirstChild("HitEvent") then
+                                    v.HitEvent:FireServer(Vector3.new(hrp.Position.X, hrp.Position.Y + Variables.AirStrikeDistance, hrp.Position.Z))
+                                    Step()
+                                end
+                            end
+                        end
+                        if v.Character and v.Character:FindFirstChild("Shuriken") then
+                            for i,v in pairs(v.Character:GetChildren()) do
+                                if v.Name == "Shuriken" and v:FindFirstChild("HitEvent") then
+                                    v.HitEvent:FireServer(Vector3.new(hrp.Position.X, hrp.Position.Y + Variables.AirStrikeDistance, hrp.Position.Z))
+                                    Step()
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end;
+        ["1001"] = function()
+            if Character and Functions.GetRoot(Character) then
+                local hrp = Functions.GetRoot(Character)
+                if Character and Character:FindFirstChild("Shuriken") then
+                    for i,v in pairs(Character:GetChildren()) do
+                        if v.Name == "Shuriken" then
+                            local distanceX = math.random(-100,100)
+                            local distanceZ = math.random(-100,100)
+                            local resultVector = Vector3.new(hrp.Position.X + distanceX,hrp.Position.Y + Variables.ShotgunFireSpread,hrp.Position.Z + distanceZ)
+                            v:FindFirstChild("HitEvent"):FireServer(resultVector)
+                        end
+                    end
+                end
+                if Variables.OptionalEquip then
+                    for i,v in pairs(Players.LocalPlayer.Backpack:GetChildren()) do
+                        if v.Name == "Shuriken" then
+                            local distanceX = math.random(-100,100)
+                            local distanceZ = math.random(-100,100)
+                            local resultVector = Vector3.new(hrp.Position.X + distanceX,hrp.Position.Y + Variables.ShotgunFireSpread,hrp.Position.Z + distanceZ)
+                            v:FindFirstChild("HitEvent"):FireServer(resultVector)
+                        end
+                    end
+                end
+            end
+        end;
+        ["1011"] = function()
+            if Character and Functions.GetRoot(Character) then
+                local hrp = Functions.GetRoot(Character)
+                for i,v in pairs(Players:GetPlayers()) do
+                    if (Variables.PlayerShurikenCheck and v ~= targetplr) or (not Variables.PlayerShurikenCheck) then
+                        if v:FindFirstChild("Backpack") and v.Backpack:FindFirstChild("Shuriken") then
+                            for i,v in pairs(v.Backpack:GetChildren()) do
+                                if v.Name == "Shuriken" and v:FindFirstChild("HitEvent") then
+                                    local distanceX = math.random(-100,100)
+                                    local distanceZ = math.random(-100,100)
+                                    local resultVector = Vector3.new(hrp.Position.X + distanceX,hrp.Position.Y + Variables.ShotgunFireSpread,hrp.Position.Z + distanceZ)
+                                    v.HitEvent:FireServer(resultVector)
+                                    Step()
+                                end
+                            end
+                        end
+                        if v.Character and v.Character:FindFirstChild("Shuriken") then
+                            for i,v in pairs(v.Character:GetChildren()) do
+                                if v.Name == "Shuriken" and v:FindFirstChild("HitEvent") then
+                                    local distanceX = math.random(-100,100)
+                                    local distanceZ = math.random(-100,100)
+                                    local resultVector = Vector3.new(hrp.Position.X + distanceX,hrp.Position.Y + Variables.ShotgunFireSpread,hrp.Position.Z + distanceZ)
+                                    v.HitEvent:FireServer(resultVector)
+                                    Step()
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end;
+        ["0001"] = function()
+            if Character and Character:FindFirstChild("Shuriken") then
+                for i,v in pairs(Character:GetChildren()) do
+                    if v.Name == "Shuriken" and targetplr and targetplr.Character and targetplr.Character:FindFirstChild(Variables.AimPart) then
+                        local distanceX = math.random(-100,100)
+                        local distanceY = math.random(-100,100)
+                        local distanceZ = math.random(-100,100)
+                        local aimpart = targetplr.Character:FindFirstChild(Variables.AimPart)
+                        local resultVector = Vector3.new(aimpart.Position.X + distanceX, aimpart.Position.Y + distanceY, aimpart.Position.Z + distanceZ)
+                        v:FindFirstChild("HitEvent"):FireServer(resultVector)
+                    end
+                end
+            end
+            if Variables.OptionalEquip then
+                for i,v in pairs(Players.LocalPlayer.Backpack:GetChildren()) do
+                    if v.Name == "Shuriken" and targetplr and targetplr.Character and targetplr.Character:FindFirstChild(Variables.AimPart) then
+                        local distanceX = math.random(-100,100)
+                        local distanceY = math.random(-100,100)
+                        local distanceZ = math.random(-100,100)
+                        local aimpart = targetplr.Character:FindFirstChild(Variables.AimPart)
+                        local resultVector = Vector3.new(aimpart.Position.X + distanceX, aimpart.Position.Y + distanceY, aimpart.Position.Z + distanceZ)
+                        v:FindFirstChild("HitEvent"):FireServer(resultVector)
+                    end
+                end
+            end
+        end;
+        ["0011"] = function()
+            for i,v in pairs(Players:GetPlayers()) do
+                if (Variables.PlayerShurikenCheck and v ~= targetplr) or (not Variables.PlayerShurikenCheck) then
+                    if v:FindFirstChild("Backpack") and v.Backpack:FindFirstChild("Shuriken") then
+                        for i,v in pairs(v.Backpack:GetChildren()) do
+                            if v.Name == "Shuriken" and v:FindFirstChild("HitEvent") and targetplr and targetplr.Character and targetplr.Character:FindFirstChild(Variables.AimPart) then
+                                local distanceX = math.random(-100,100)
+                                local distanceY = math.random(-100,100)
+                                local distanceZ = math.random(-100,100)
+                                local aimpart = targetplr.Character:FindFirstChild(Variables.AimPart)
+                                local resultVector = Vector3.new(aimpart.Position.X + distanceX, aimpart.Position.Y + distanceY, aimpart.Position.Z + distanceZ)
+                                v.HitEvent:FireServer(resultVector)
+                                Step()
+                            end
+                        end
+                    end
+                    if v.Character and v.Character:FindFirstChild("Shuriken") then
+                        for i,v in pairs(v.Character:GetChildren()) do
+                            if v.Name == "Shuriken" and v:FindFirstChild("HitEvent") and targetplr and targetplr.Character and targetplr.Character:FindFirstChild(Variables.AimPart) then
+                                local distanceX = math.random(-100,100)
+                                local distanceY = math.random(-100,100)
+                                local distanceZ = math.random(-100,100)
+                                local aimpart = targetplr.Character:FindFirstChild(Variables.AimPart)
+                                local resultVector = Vector3.new(aimpart.Position.X + distanceX, aimpart.Position.Y + distanceY, aimpart.Position.Z + distanceZ)
+                                v.HitEvent:FireServer(resultVector)
+                                Step()
+                            end
+                        end
+                    end
+                end
+            end
+        end;
+        ["0100"] = function()
+            if workspace:FindFirstChild("SPEEDPART") then
+                if Character and Character:FindFirstChild("Shuriken") then
+                    for i,v in pairs(Character:GetChildren()) do
+                        if v.Name == "Shuriken" then
+                            v:FindFirstChild("HitEvent"):FireServer(workspace:FindFirstChild("SPEEDPART").Position)
+                            local shur = v
+                            if pshurthrown and Character:FindFirstChild("Humanoid") then
+                                for i,v in pairs(AllThrowAnimations) do
+                                    v:Stop()
+                                end
+                                AllThrowAnimations.ThrowAnim = Character:FindFirstChild("Humanoid"):WaitForChild("Animator"):LoadAnimation(shur:FindFirstChild("LocalScript"):FindFirstChild("ThrowAnim"))
+                                AllThrowAnimations.ThrowAnim:Play()
+                                pshurthrown = false
+                            end
+                        end
+                    end
+                end
+            end
+        end;
+    };
+}
+
 local MainWindow =
     Fluent:CreateWindow(
     {
@@ -1555,6 +1782,18 @@ Functions.GetTargetPlayer = function()
         Player = Functions.ClosestPlayer()
     end
     return Player
+end
+
+Functions.BoolsToBinary = function(tab)
+    local str = ""
+    for i = 1,#tab do
+        if tab[i] == true then
+            str = str.."1"
+        else
+            str = str.."0"
+        end
+    end
+    return str
 end
 
 -- // Main Functions Below \\ --
@@ -3202,6 +3441,69 @@ Functions.CreateMainTabs = function()
                     pcall(function()
                         Variables.AutoWLTarget = false
                         Functions.WhitelistCharacterTouched.AutoWhitelistTargetting = nil
+                    end)
+                end
+            end
+        })
+
+        AddVariables({["AutoFire"] = false})
+        CombatToggles:AddToggle("AutoFire",{
+            Title = "Auto Fire";
+            Description = "Automatically fires when there are players in the targetlist at all.";
+            Default = false;
+            Callback = function(state)
+                if state then
+
+                    Variables.AutoFire = true
+                    local pshurthrown = false
+                    local AllThrowAnimations = {}
+                    local WaitTable = {game:GetService("RunService").Stepped, game:GetService("RunService").Heartbeat, game:GetService("RunService").RenderStepped}
+                    local WaitValue = 0
+                    
+                    local function Step()
+                        if Variables.AutoFireWait >= 0 then
+                            task.wait(Variables.AutoFireWait)
+                        elseif Variables.AutoFireWait == -1 then
+                            WaitValue = WaitValue + 1
+                            WaitTable[WaitValue]:wait()
+                            if WaitValue >= 3 then
+                                WaitValue = 0
+                            end
+                        end
+                    end
+
+                    coroutine.resume(coroutine.create(function()
+                        while Variables.AutoFire do
+                            for n,t in pairs(Lists.Targetlist) do
+                                for w,p in pairs(t) do
+                                    if Players:FindFirstChild(p) then
+                                        local v = Players:FindFirstChild(p)
+                                        if not Functions.ListFind("Whitelist",v.Name) and v.Character and not v.Character:FindFirstChild("ForceField") and v.Character:FindFirstChild("Humanoid") and v.Character:FindFirstChild("Humanoid").Health > 0 and v.Character:FindFirstChild("Humanoid"):GetState() ~= Enum.HumanoidStateType.Dead and v.Character:FindFirstChild(Variables.AimPart) and (Variables.FireOnGodMode or not Functions.IsGodded(v)) then
+                                            local targetplr = v
+                                            local code = BoolsToBinary({Variables.AirStrikeMode, Variables.PredictMode, Variables.ServerShurikens, Variables.ShotgunFire})
+                                            TableFuncs["AutoFire"][code]()
+                                        end
+                                    end
+                                end
+                            end
+                            task.wait()
+                        end
+                    end))
+
+                    Functions.WorkspaceDescendantAdded.AutoFirePredict = function(child)
+                        if Variables.PredictMode then
+                            if child.Name == "ThrownKunai" then
+                                if child:WaitForChild("creator").Value == Players.LocalPlayer then
+                                    pshurthrown = true
+                                end
+                            end
+                        end
+                    end
+
+                else
+                    pcall(function()
+                        Variables.AutoFire = false
+                        Functions.WorkspaceDescendantAdded.AutoFirePredict = nil
                     end)
                 end
             end
