@@ -1485,7 +1485,7 @@ local MainWindow =
     Fluent:CreateWindow(
     {
         Title = "Project Ninja Assassin v" .. VERSION,
-        SubTitle = "by 5 Big Guys",
+        SubTitle = "by 5 Big Guys and they grab on yo thighs",
         TabWidth = 160,
         Size = UDim2.fromOffset(580, 460),
         Acrylic = true,
