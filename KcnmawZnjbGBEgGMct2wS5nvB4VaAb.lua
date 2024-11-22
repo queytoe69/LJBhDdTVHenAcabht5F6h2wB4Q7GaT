@@ -1297,7 +1297,7 @@ local TableFuncs = {
                 end
             end
         end;
-        ["0010"] = function()
+        ["0010"] = function(Step)
             for i,v in pairs(Players:GetPlayers()) do
                 if (Variables.PlayerShurikenCheck and v ~= targetplr) or (not Variables.PlayerShurikenCheck) then
                     if v:FindFirstChild("Backpack") and v.Backpack:FindFirstChild("Shuriken") then
@@ -1319,7 +1319,7 @@ local TableFuncs = {
                 end
             end
         end;
-        ["1010"] = function()
+        ["1010"] = function(Step)
             if Character and Functions.GetRoot(Character) then
                 local hrp = Functions.GetRoot(Character)
                 for i,v in pairs(Players:GetPlayers()) do
@@ -1369,7 +1369,7 @@ local TableFuncs = {
                 end
             end
         end;
-        ["1011"] = function()
+        ["1011"] = function(Step)
             if Character and Functions.GetRoot(Character) then
                 local hrp = Functions.GetRoot(Character)
                 for i,v in pairs(Players:GetPlayers()) do
@@ -1426,7 +1426,7 @@ local TableFuncs = {
                 end
             end
         end;
-        ["0011"] = function()
+        ["0011"] = function(Step)
             for i,v in pairs(Players:GetPlayers()) do
                 if (Variables.PlayerShurikenCheck and v ~= targetplr) or (not Variables.PlayerShurikenCheck) then
                     if v:FindFirstChild("Backpack") and v.Backpack:FindFirstChild("Shuriken") then
@@ -3460,7 +3460,7 @@ Functions.CreateMainTabs = function()
                     local WaitTable = {game:GetService("RunService").Stepped, game:GetService("RunService").Heartbeat, game:GetService("RunService").RenderStepped}
                     local WaitValue = 0
                     
-                    local function Step()
+                    local Step = function()
                         if Variables.AutoFireWait >= 0 then
                             task.wait(Variables.AutoFireWait)
                         elseif Variables.AutoFireWait == -1 then
@@ -3481,7 +3481,7 @@ Functions.CreateMainTabs = function()
                                         if not Functions.ListFind("Whitelist",v.Name) and v.Character and not v.Character:FindFirstChild("ForceField") and v.Character:FindFirstChild("Humanoid") and v.Character:FindFirstChild("Humanoid").Health > 0 and v.Character:FindFirstChild("Humanoid"):GetState() ~= Enum.HumanoidStateType.Dead and v.Character:FindFirstChild(Variables.AimPart) and (Variables.FireOnGodMode or not Functions.IsGodded(v)) then
                                             local targetplr = v
                                             local code = Functions.BoolsToBinary({Variables.AirStrikeMode, Variables.PredictMode, Variables.ServerShurikens, Variables.ShotgunFire})
-                                            TableFuncs["AutoFire"][code]()
+                                            TableFuncs["AutoFire"][code](Step)
                                         end
                                     end
                                 end
