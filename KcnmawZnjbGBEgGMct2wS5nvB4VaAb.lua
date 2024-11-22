@@ -3151,7 +3151,7 @@ Functions.CreateMainTabs = function()
             end
         })
 
-        AddVariables({["SilentAim"] = false, ["FilterList"] = {}, ["ShotgunFire"] = false, ["AirStrikeMode"] = false, ["TeleportShuriken"] = false, ["RapidMode"] = false, ["RapidMultiplier"] = 10})
+        AddVariables({["SilentAim"] = false, ["FilterList"] = {}, ["ShotgunFire"] = false, ["ShotgunFireSpread"] = 300, ["AirStrikeMode"] = false, ["AirStrikeDistance"] = 300, ["TeleportShuriken"] = false, ["RapidMode"] = false, ["RapidMultiplier"] = 10})
         CombatToggles:AddToggle("SilentAim",{
             Title = "Silent Aim";
             Description = "Moves your shuriken to a speficied player after you shoot it. There are different modes as well.";
@@ -3446,7 +3446,7 @@ Functions.CreateMainTabs = function()
             end
         })
 
-        AddVariables({["AutoFire"] = false})
+        AddVariables({["AutoFire"] = false, ["AutoFireWait"] = 0.02, ["AutoFireFinishWait"] = 0.02, ["OptionalEquip"] = false, ["ServerShurikens"] = false, ["PlayerShurikenCheck"] = false})
         CombatToggles:AddToggle("AutoFire",{
             Title = "Auto Fire";
             Description = "Automatically fires when there are players in the targetlist at all.";
@@ -3709,6 +3709,58 @@ Functions.CreateMainTabs = function()
             end;
         })
 
+        CombatSettings:AddToggle("OptionalShurikenEquip",{
+            Title = "Optional Shuriken Equip";
+            Description = "Makes it so equipping a shuriken is optional with auto fire. Meaning it will fire at people even if you don't have a shuriken equipped.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.OptionalEquip = true
+                else
+                    Variables.OptionalEquip = false
+                end
+            end;
+        })
+    
+        CombatSettings:AddToggle("UseServerShurikens",{
+            Title = "Use Server Shurikens";
+            Description = "Uses the whole server's shurikens when firing. They all do your damage still.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.ServerShurikens = true
+                else
+                    Variables.ServerShurikens = false
+                end
+            end
+        })
+    
+        CombatSettings:AddToggle("PlayerShurikenCheck",{
+            Title = "Player Shuriken Check";
+            Description = "Checks for the shuriken of the player that you are shooting and doesn't use it because it would do your damage to you.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.PlayerShurikenCheck = true
+                else
+                    Variables.PlayerShurikenCheck = false
+                end
+            end
+        })
+    
+        CombatSettings:AddToggle("ShotgunFire",{
+            Title = "Shotgun Fire";
+            Description = "Enables a shotgun-like spread for shurikens. Useful for when players are running away.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.ShotgunFire = true
+                else
+                    Variables.ShotgunFire = false
+                end
+            end
+        })
+
         CombatSettings:AddToggle("FireOnGodMode",{
             Title = "Fire On Godded Players";
             Description = "Allows auto fire and silent aim to fire shurikens even when the player it's firing at is godded.";
@@ -3750,12 +3802,12 @@ Functions.CreateMainTabs = function()
         CombatSettings:AddInput("LoopbringDistance",{
             Title = "Loop Bring Distance";
             Description = "Configure loop bring distance.";
-            Default = Variables.loopBringDistance;
+            Default = Variables.LoopBringDistance;
             Placeholder = "Enter a number..";
             Numeric = true;
             Finished = true;
             Callback = function(Value)
-                Variables.loopBringDistance = tonumber(Value)
+                Variables.LoopBringDistance = tonumber(Value)
             end;
         })
 
@@ -3780,6 +3832,30 @@ Functions.CreateMainTabs = function()
             Finished = true;
             Callback = function(Value)
                 Variables.PredictModeOffset = tonumber(Value)
+            end;
+        })
+
+        CombatSettings:AddInput("AutoFireWait",{
+            Title = "Auto Fire Wait";
+            Description = "Configure fire wait time";
+            Default = Variables.AutoFireWait;
+            Placeholder = "Enter a number..";
+            Numeric = true;
+            Finished = true;
+            Callback = function(Value)
+                Variables.AutoFireWait = tonumber(Value)
+            end
+        })
+    
+        CombatSettings:AddInput("AutoFireFinishWait",{
+            Title = "Auto Fire Finish Wait";
+            Description = "Configure wait time at finish";
+            Default = Variables.AutoFireFinishWait;
+            Placeholder = "Enter a number..";
+            Numeric = true;
+            Finished = true;
+            Callback = function(Value)
+                Variables.AutoFireFinishWait = tonumber(Value)
             end;
         })
 
