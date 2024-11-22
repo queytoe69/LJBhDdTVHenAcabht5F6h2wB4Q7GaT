@@ -31,6 +31,9 @@ Functions.CharacterTouched = {}
 Functions.WhitelistCharacterTouched = {}
 Functions.WorkspaceDescendantAdded = {}
 Functions.WorkspaceDescendantRemoved = {}
+Functions.Heartbeat = {}
+Functions.RenderStepped = {}
+Functions.Stepped = {}
 
 local Constants = {
     BodyParts = {"Head","HumanoidRootPart","UpperTorso","LowerTorso","RightUpperArm","LeftUpperArm","RightLowerArm","LeftLowerArm","RightHand","LeftHand","RightUpperLeg","LeftUpperLeg","RightLowerLeg","LeftLowerLeg","RightFoot", "LeftFoot"};
@@ -1297,6 +1300,26 @@ local TableFuncs = {
                 end
             end
         end;
+        ["0100"] = function()
+            if workspace:FindFirstChild("SPEEDPART") then
+                if Character and Character:FindFirstChild("Shuriken") then
+                    for i,v in pairs(Character:GetChildren()) do
+                        if v.Name == "Shuriken" then
+                            v:FindFirstChild("HitEvent"):FireServer(workspace:FindFirstChild("SPEEDPART").Position)
+                            local shur = v
+                            if pshurthrown and Character:FindFirstChild("Humanoid") then
+                                for i,v in pairs(AllThrowAnimations) do
+                                    v:Stop()
+                                end
+                                AllThrowAnimations.ThrowAnim = Character:FindFirstChild("Humanoid"):WaitForChild("Animator"):LoadAnimation(shur:FindFirstChild("LocalScript"):FindFirstChild("ThrowAnim"))
+                                AllThrowAnimations.ThrowAnim:Play()
+                                pshurthrown = false
+                            end
+                        end
+                    end
+                end
+            end
+        end;
         ["0010"] = function(Step)
             for i,v in pairs(Players:GetPlayers()) do
                 if (Variables.PlayerShurikenCheck and v ~= targetplr) or (not Variables.PlayerShurikenCheck) then
@@ -1312,6 +1335,64 @@ local TableFuncs = {
                         for i,v in pairs(v.Character:GetChildren()) do
                             if v.Name == "Shuriken" and v:FindFirstChild("HitEvent") and targetplr and targetplr.Character and targetplr.Character:FindFirstChild(Variables.AimPart) then
                                 v.HitEvent:FireServer(targetplr.Character:FindFirstChild(Variables.AimPart).Position)
+                                Step()
+                            end
+                        end
+                    end
+                end
+            end
+        end;
+        ["0001"] = function()
+            if Character and Character:FindFirstChild("Shuriken") then
+                for i,v in pairs(Character:GetChildren()) do
+                    if v.Name == "Shuriken" and targetplr and targetplr.Character and targetplr.Character:FindFirstChild(Variables.AimPart) then
+                        local distanceX = math.random(-100,100)
+                        local distanceY = math.random(-100,100)
+                        local distanceZ = math.random(-100,100)
+                        local aimpart = targetplr.Character:FindFirstChild(Variables.AimPart)
+                        local resultVector = Vector3.new(aimpart.Position.X + distanceX, aimpart.Position.Y + distanceY, aimpart.Position.Z + distanceZ)
+                        v:FindFirstChild("HitEvent"):FireServer(resultVector)
+                    end
+                end
+            end
+            if Variables.OptionalEquip then
+                for i,v in pairs(Players.LocalPlayer.Backpack:GetChildren()) do
+                    if v.Name == "Shuriken" and targetplr and targetplr.Character and targetplr.Character:FindFirstChild(Variables.AimPart) then
+                        local distanceX = math.random(-100,100)
+                        local distanceY = math.random(-100,100)
+                        local distanceZ = math.random(-100,100)
+                        local aimpart = targetplr.Character:FindFirstChild(Variables.AimPart)
+                        local resultVector = Vector3.new(aimpart.Position.X + distanceX, aimpart.Position.Y + distanceY, aimpart.Position.Z + distanceZ)
+                        v:FindFirstChild("HitEvent"):FireServer(resultVector)
+                    end
+                end
+            end
+        end;
+        ["0011"] = function(Step)
+            for i,v in pairs(Players:GetPlayers()) do
+                if (Variables.PlayerShurikenCheck and v ~= targetplr) or (not Variables.PlayerShurikenCheck) then
+                    if v:FindFirstChild("Backpack") and v.Backpack:FindFirstChild("Shuriken") then
+                        for i,v in pairs(v.Backpack:GetChildren()) do
+                            if v.Name == "Shuriken" and v:FindFirstChild("HitEvent") and targetplr and targetplr.Character and targetplr.Character:FindFirstChild(Variables.AimPart) then
+                                local distanceX = math.random(-100,100)
+                                local distanceY = math.random(-100,100)
+                                local distanceZ = math.random(-100,100)
+                                local aimpart = targetplr.Character:FindFirstChild(Variables.AimPart)
+                                local resultVector = Vector3.new(aimpart.Position.X + distanceX, aimpart.Position.Y + distanceY, aimpart.Position.Z + distanceZ)
+                                v.HitEvent:FireServer(resultVector)
+                                Step()
+                            end
+                        end
+                    end
+                    if v.Character and v.Character:FindFirstChild("Shuriken") then
+                        for i,v in pairs(v.Character:GetChildren()) do
+                            if v.Name == "Shuriken" and v:FindFirstChild("HitEvent") and targetplr and targetplr.Character and targetplr.Character:FindFirstChild(Variables.AimPart) then
+                                local distanceX = math.random(-100,100)
+                                local distanceY = math.random(-100,100)
+                                local distanceZ = math.random(-100,100)
+                                local aimpart = targetplr.Character:FindFirstChild(Variables.AimPart)
+                                local resultVector = Vector3.new(aimpart.Position.X + distanceX, aimpart.Position.Y + distanceY, aimpart.Position.Z + distanceZ)
+                                v.HitEvent:FireServer(resultVector)
                                 Step()
                             end
                         end
@@ -1394,84 +1475,6 @@ local TableFuncs = {
                                     v.HitEvent:FireServer(resultVector)
                                     Step()
                                 end
-                            end
-                        end
-                    end
-                end
-            end
-        end;
-        ["0001"] = function()
-            if Character and Character:FindFirstChild("Shuriken") then
-                for i,v in pairs(Character:GetChildren()) do
-                    if v.Name == "Shuriken" and targetplr and targetplr.Character and targetplr.Character:FindFirstChild(Variables.AimPart) then
-                        local distanceX = math.random(-100,100)
-                        local distanceY = math.random(-100,100)
-                        local distanceZ = math.random(-100,100)
-                        local aimpart = targetplr.Character:FindFirstChild(Variables.AimPart)
-                        local resultVector = Vector3.new(aimpart.Position.X + distanceX, aimpart.Position.Y + distanceY, aimpart.Position.Z + distanceZ)
-                        v:FindFirstChild("HitEvent"):FireServer(resultVector)
-                    end
-                end
-            end
-            if Variables.OptionalEquip then
-                for i,v in pairs(Players.LocalPlayer.Backpack:GetChildren()) do
-                    if v.Name == "Shuriken" and targetplr and targetplr.Character and targetplr.Character:FindFirstChild(Variables.AimPart) then
-                        local distanceX = math.random(-100,100)
-                        local distanceY = math.random(-100,100)
-                        local distanceZ = math.random(-100,100)
-                        local aimpart = targetplr.Character:FindFirstChild(Variables.AimPart)
-                        local resultVector = Vector3.new(aimpart.Position.X + distanceX, aimpart.Position.Y + distanceY, aimpart.Position.Z + distanceZ)
-                        v:FindFirstChild("HitEvent"):FireServer(resultVector)
-                    end
-                end
-            end
-        end;
-        ["0011"] = function(Step)
-            for i,v in pairs(Players:GetPlayers()) do
-                if (Variables.PlayerShurikenCheck and v ~= targetplr) or (not Variables.PlayerShurikenCheck) then
-                    if v:FindFirstChild("Backpack") and v.Backpack:FindFirstChild("Shuriken") then
-                        for i,v in pairs(v.Backpack:GetChildren()) do
-                            if v.Name == "Shuriken" and v:FindFirstChild("HitEvent") and targetplr and targetplr.Character and targetplr.Character:FindFirstChild(Variables.AimPart) then
-                                local distanceX = math.random(-100,100)
-                                local distanceY = math.random(-100,100)
-                                local distanceZ = math.random(-100,100)
-                                local aimpart = targetplr.Character:FindFirstChild(Variables.AimPart)
-                                local resultVector = Vector3.new(aimpart.Position.X + distanceX, aimpart.Position.Y + distanceY, aimpart.Position.Z + distanceZ)
-                                v.HitEvent:FireServer(resultVector)
-                                Step()
-                            end
-                        end
-                    end
-                    if v.Character and v.Character:FindFirstChild("Shuriken") then
-                        for i,v in pairs(v.Character:GetChildren()) do
-                            if v.Name == "Shuriken" and v:FindFirstChild("HitEvent") and targetplr and targetplr.Character and targetplr.Character:FindFirstChild(Variables.AimPart) then
-                                local distanceX = math.random(-100,100)
-                                local distanceY = math.random(-100,100)
-                                local distanceZ = math.random(-100,100)
-                                local aimpart = targetplr.Character:FindFirstChild(Variables.AimPart)
-                                local resultVector = Vector3.new(aimpart.Position.X + distanceX, aimpart.Position.Y + distanceY, aimpart.Position.Z + distanceZ)
-                                v.HitEvent:FireServer(resultVector)
-                                Step()
-                            end
-                        end
-                    end
-                end
-            end
-        end;
-        ["0100"] = function()
-            if workspace:FindFirstChild("SPEEDPART") then
-                if Character and Character:FindFirstChild("Shuriken") then
-                    for i,v in pairs(Character:GetChildren()) do
-                        if v.Name == "Shuriken" then
-                            v:FindFirstChild("HitEvent"):FireServer(workspace:FindFirstChild("SPEEDPART").Position)
-                            local shur = v
-                            if pshurthrown and Character:FindFirstChild("Humanoid") then
-                                for i,v in pairs(AllThrowAnimations) do
-                                    v:Stop()
-                                end
-                                AllThrowAnimations.ThrowAnim = Character:FindFirstChild("Humanoid"):WaitForChild("Animator"):LoadAnimation(shur:FindFirstChild("LocalScript"):FindFirstChild("ThrowAnim"))
-                                AllThrowAnimations.ThrowAnim:Play()
-                                pshurthrown = false
                             end
                         end
                     end
@@ -1888,19 +1891,18 @@ Functions.CreateMainTabs = function()
             Callback = function(state)
                 if state then
                     Variables.AutoTrain = true
-                    task.spawn(function()
-                        while Variables.AutoTrain do
-                            if not Variables.GainingNegativeNin then
-                                game:GetService("ReplicatedStorage").RemoteEvent.AddPowerEvent:FireServer("FromTraining",Variables.TrainAmount)
-                                task.wait(Variables.TrainRate)
-                                game:GetService("ReplicatedStorage").RemoteEvent.AddPowerEvent:FireServer("FromTraining",Variables.TrainAmount - 0.001)
-                                task.wait(Variables.TrainRate)
-                            else
-                                task.wait()
-                            end
+                    local Last = 0
+                    local Event = game:GetService("ReplicatedStorage").RemoteEvent.AddPowerEvent
+                    Functions.Heartbeat.AutoTrain = {Variables.TrainRate, tick() + Variables.TrainRate, function()
+                        if Last ~= Variables.TrainAmount then
+                            Last = Variables.TrainAmount
+                        else
+                            Last = Variables.TrainAmount - 0.001
                         end
-                    end)
+                        Event:FireServer("FromTraining",Last)
+                    end}
                 else
+                    Functions.Heartbeat.AutoTrain = nil
                     Variables.AutoTrain = false
                 end
             end
@@ -2125,37 +2127,48 @@ Functions.CreateMainTabs = function()
             Default = false;
             Callback = function(state)
                 if state then
+
                     Variables.AntiBubble = true
-                    coroutine.resume(coroutine.create(function()
-                        local weapon = 1
-                        local lastWeapon = nil
-                        while Variables.AntiBubble do
-                            if Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChildWhichIsA("ForceField") and Variables.CharRespawning == false then
-                                if weapon == 1 and Players.LocalPlayer.Backpack:FindFirstChild("Sword") then
-                                    lastWeapon = Players.LocalPlayer.Backpack:FindFirstChild("Sword")
-                                    lastWeapon.Parent = Character
-                                    weapon = 2
-                                elseif weapon == 2 and Players.LocalPlayer.Backpack:FindFirstChild("Shuriken") then
-                                    lastWeapon = Players.LocalPlayer.Backpack:FindFirstChild("Shuriken")
-                                    lastWeapon.Parent = Character
-                                    weapon = 1
-                                end
-                                task.wait()
-                                if lastWeapon and lastWeapon.Parent then
-                                    lastWeapon.Parent = Players.LocalPlayer.Backpack
-                                end
-                            else
-                                task.wait()
+                    local weapon = 1
+                    local lastWeapon = nil
+
+                    local function RemoveBubble()
+                        repeat
+                            if weapon == 1 and Players.LocalPlayer.Backpack:FindFirstChild("Sword") then
+                                lastWeapon = Players.LocalPlayer.Backpack:FindFirstChild("Sword")
+                                lastWeapon.Parent = Character
+                                weapon = 2
+                            elseif weapon == 2 and Players.LocalPlayer.Backpack:FindFirstChild("Shuriken") then
+                                lastWeapon = Players.LocalPlayer.Backpack:FindFirstChild("Shuriken")
+                                lastWeapon.Parent = Character
+                                weapon = 1
+                            end
+                            task.wait()
+                            if lastWeapon and lastWeapon.Parent then
+                                lastWeapon.Parent = Players.LocalPlayer.Backpack
+                            end
+                        until not Character:FindFirstChild("ForceField")
+                    end
+
+                    if Character and Character:FindFirstChild("ForceField") then
+                        RemoveBubble()
+                    end
+
+                    Functions.WorkspaceDescendantAdded.AntiBubble = function(child)
+                        if child:IsA("ForceField") and Character and child.Parent == Character then
+                            if not Variables.CharRespawning then
+                                RemoveBubble()
                             end
                         end
-                    end))
+                    end
+
                 else
                     Variables.AntiBubble = false
                 end
             end
         })
 
-        AddVariables({["AutoPosition"] = false, ["Positioning"] = {['X'] = 0, ['Y'] = 0, ['Z'] = 0}})
+        AddVariables({["AutoPosition"] = false, ["Positioning"] = {['x'] = 0, ['y'] = 0, ['z'] = 0}})
         TrainingToggles:AddToggle("Auto Position",{
             Title = "Auto Position";
             Description = "Automatically teleports you to a position in the world. Uses the X, Y, and Z variables of auto positioning.";
@@ -2163,16 +2176,14 @@ Functions.CreateMainTabs = function()
             Callback = function(state)
                 if state then
                     Variables.AutoPosition = true
-                    coroutine.resume(coroutine.create(function()
-                        while Variables.AutoPosition do
-                            local location = CFrame.new(Variables.Positioning.x, Variables.Positioning.y, Variables.Positioning.z)
-                            if Functions.GetRoot(Character) then
-                                Functions.GetRoot(Character).CFrame = location
-                            end
-                            task.wait(10)
+                    Functions.Heartbeat.AutoPosition = {10, tick() + 10, function()
+                        local location = CFrame.new(Variables.Positioning.x, Variables.Positioning.y, Variables.Positioning.z)
+                        if Functions.GetRoot(Character) then
+                            Functions.GetRoot(Character).CFrame = location
                         end
-                    end))
+                    end}
                 else
+                    Functions.Heartbeat.AutoPosition = nil
                     Variables.AutoPosition = false
                 end
             end
@@ -2186,23 +2197,21 @@ Functions.CreateMainTabs = function()
             Callback = function(state)
                 if state then
                     Variables.AutoReconnect = true
-                    coroutine.resume(coroutine.create(function()
-                        while Variables.AutoReconnect do
-                            if CoreGui.RobloxPromptGui.promptOverlay:FindFirstChild("ErrorPrompt") then
-                                if CoreGui.RobloxPromptGui.promptOverlay:FindFirstChild("ErrorPrompt").TitleFrame.ErrorTitle.Text == "Disconnected" then
-                                    if #Players:GetPlayers() <= 1 then
-                                        Players.LocalPlayer:Kick("\nRejoining...")
-                                        task.wait()
-                                        TeleportService:Teleport(game.PlaceId, Players.LocalPlayer)
-                                    else
-                                        TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, Players.LocalPlayer)
-                                    end
+                    Functions.Heartbeat.AutoReconnect = {0.5, tick() + 0.5, function()
+                        if CoreGui.RobloxPromptGui.promptOverlay:FindFirstChild("ErrorPrompt") then
+                            if CoreGui.RobloxPromptGui.promptOverlay:FindFirstChild("ErrorPrompt").TitleFrame.ErrorTitle.Text == "Disconnected" then
+                                if #Players:GetPlayers() <= 1 then
+                                    Players.LocalPlayer:Kick("\nRejoining...")
+                                    task.wait()
+                                    TeleportService:Teleport(game.PlaceId, Players.LocalPlayer)
+                                else
+                                    TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, Players.LocalPlayer)
                                 end
                             end
-                            task.wait(0.5)
                         end
-                    end))
+                    end}
                 else
+                    Functions.Heartbeat.AutoReconnect = nil
                     Variables.AutoReconnect = false
                 end
             end
@@ -2223,11 +2232,11 @@ Functions.CreateMainTabs = function()
                             end
                         end
                     end
-                    Noclipping = RunService.Stepped:Connect(NoclipLoop)
+                    Functions.Stepped.Noclip = {0,0,function()
+                        NoclipLoop()
+                    end}
                 else
-                    pcall(function()
-                        Noclipping:Disconnect()
-                    end)
+                    Functions.Stepped.Noclip = nil
                 end
             end
         })
@@ -2307,14 +2316,12 @@ Functions.CreateMainTabs = function()
             Callback = function(state)
                 if state then
                     Variables.AntiFirstScreen = true
-                    coroutine.resume(coroutine.create(function()
-                        while Variables.AntiFirstScreen do
-                            game:GetService("Lighting"):FindFirstChild("Blur").Enabled = false
-                            Player:WaitForChild("PlayerGui"):FindFirstChild("FirstScreenGui").Enabled = false
-                            task.wait(0.1)
-                        end
-                    end))
+                    Functions.Heartbeat.AntiFirstScreen = {0.1,tick() + 0.1,function()
+                        game:GetService("Lighting"):FindFirstChild("Blur").Enabled = false
+                        Player:WaitForChild("PlayerGui"):FindFirstChild("FirstScreenGui").Enabled = false
+                    end}
                 else
+                    Functions.Heartbeat.AntiFirstScreen = nil
                     Variables.AntiFirstScreen = false
                 end
             end
@@ -3945,6 +3952,36 @@ Functions.StartMainConnections = function()
 
 end
 
+Functions.StartMainLoops = function()
+    RunService.Heartbeat:Connect(function()
+        if not next(Functions.Heartbeat) then return end
+        for _,v in pairs(Functions.Heartbeat) do
+            if tick() >= v[2] then
+                v[2] = tick() + v[1]
+                v[3]()
+            end
+        end
+    end)
+    RunService.RenderStepped:Connect(function()
+        if not next(Functions.RenderStepped) then return end
+        for _,v in pairs(Functions.RenderStepped) do
+            if tick() >= v[2] then
+                v[2] = tick() + v[1]
+                v[3]()
+            end
+        end
+    end)
+    RunService.Stepped:Connect(function()
+        if not next(Functions.Stepped) then return end
+        for _,v in pairs(Functions.Stepped) do
+            if tick() >= v[2] then
+                v[2] = tick() + v[1]
+                v[3]()
+            end
+        end
+    end)
+end
+
 Functions.StartFluentSystems = function()
 
     SaveManager:SetLibrary(Fluent)
@@ -3977,6 +4014,7 @@ local success,err = pcall(function()
     Functions.LoadSettings()
     Functions.CreateMainTabs()
     Functions.StartMainConnections()
+    Functions.StartMainLoops()
     Functions.StartFluentSystems()
 end)
 
