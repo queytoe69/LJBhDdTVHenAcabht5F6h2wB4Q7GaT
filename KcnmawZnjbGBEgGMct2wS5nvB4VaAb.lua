@@ -32,10 +32,13 @@ Functions.WhitelistCharacterTouched = {}
 Functions.WorkspaceDescendantAdded = {}
 Functions.WorkspaceDescendantRemoved = {}
 
+local suffixes = {'','K+','M+','B+','T+','qd+','Qn+','sx+','Sp+','O+','N+','de+','Ud+','DD+','tdD+','qdD+','QnD+','sxD+','SpD+','OcD+','NvD+','Vgn+','UVg+','DVg+','TVg+','qtV+','QnV+','SeV+','SPG+','OVG+','NVG+','TGN+','UTG+','DTG+','tsTG+','qtTG+','QnTG+','ssTG+','SpTG+','OcTG+','NoAG+','UnAG+','DuAG+','TeAG+','QdAG+','QnAG+','SxAG+','SpAG+','OcAG+','NvAG+','CT+'}
+
 local Constants = {
     BodyParts = {"Head","HumanoidRootPart","UpperTorso","LowerTorso","RightUpperArm","LeftUpperArm","RightLowerArm","LeftLowerArm","RightHand","LeftHand","RightUpperLeg","LeftUpperLeg","RightLowerLeg","LeftLowerLeg","RightFoot", "LeftFoot"};
     Modes = {'Soft', 'Semi', 'Normal', 'Permanent'};
     Weapons = {'Sword', 'Shuriken', 'Teleport'};
+    ESPText = {"Distance", "State", "Bubble", "Godded"};
 }
 
 local Lists = {
@@ -1499,6 +1502,53 @@ Functions.CheckAllParts = function(char)
     return true
 end
 
+Functions.CommaValue = function(n)
+    if tonumber(n) then
+        local left,num,right = string.match(n,'^([^%d]*%d)(%d*)(.-)$')
+        return left..(num:reverse():gsub('(%d%d%d)','%1,'):reverse())..right
+    else
+        return n
+    end
+end
+
+Functions.HighNumberFormat = function(val)
+    if tonumber(val) then
+        local negative = false
+        if string.sub(val,1,1) == "-" then
+            val = string.sub(val,2,string.len(val))
+            negative = true
+        end
+        for i=1, #suffixes do
+            if tonumber(val) < 10^(i*3) then
+                local value = math.floor(val/((10^((i-1)*3))/100))/(100)..suffixes[i]
+                if negative then value = "-"..value end
+                return value
+            end
+        end
+    else
+        return val
+    end
+end
+
+Functions.Format = function(Int)
+    return string.format("%02i", Int)
+end
+
+Functions.Round = function(num, numDecimalPlaces)
+    local mult = 10^(numDecimalPlaces or 0)
+    return math.floor(num * mult + 0.5) / mult
+end
+
+Functions.ConvertToHMS = function(text)
+    local text = tonumber(text)
+    local seconds = math.floor(text)
+    local minutes = math.floor(text / 60)
+    local hours = math.floor(text / 60 / 60)
+    local seconds = seconds - (minutes * 60)
+    local minutes = minutes - (hours * 60)
+    return Functions.Format(hours)..":"..Functions.Format(minutes)..":"..Functions.Format(seconds)
+end
+
 Functions.GetBubble = function()
     if Character and Functions.GetRoot(Character) then
         local root = Functions.GetRoot(Character)
@@ -1739,10 +1789,10 @@ Functions.ESP = function(plr)
                             local ff = ""
                             local godded = ""
                             local newpage = ""
-                            if Tables.Settings.ESPSettings.Distance then
+                            if Variables.ESPSettings.Distance then
                                 pos = " | "..Functions.CommaValue(math.floor((Functions.GetRoot(Players.LocalPlayer.Character).Position - Functions.GetRoot(plr.Character).Position).Magnitude)).." Studs away"
                             end
-                            if Tables.Settings.ESPSettings.Godded then
+                            if Variables.ESPSettings.Godded then
                                 if Functions.IsGodded(plr.Character) then
                                     godded = " | Godded"
                                 else
@@ -1750,7 +1800,7 @@ Functions.ESP = function(plr)
                                 end
                                 newpage = "\n"
                             end
-                            if Tables.Settings.ESPSettings.Bubble then
+                            if Variables.ESPSettings.Bubble then
                                 if plr.Character:FindFirstChildOfClass("ForceField") then
                                     ff = " | Has Bubble"
                                 else
@@ -1758,7 +1808,7 @@ Functions.ESP = function(plr)
                                 end
                                 newpage = "\n"
                             end
-                            if Tables.Settings.ESPSettings.State then
+                            if Variables.ESPSettings.State then
                                 if plr.Character:FindFirstChildOfClass("Humanoid") and plr.Character:FindFirstChildOfClass("Humanoid").Health <= 0 then
                                     alv = "Dead"
                                 elseif plr.Character:FindFirstChildOfClass("Humanoid") then
@@ -1768,7 +1818,7 @@ Functions.ESP = function(plr)
                                 end
                                 newpage = "\n"
                             end
-							TextLabel.Text = plr.Name..pos..newpage..alv..ff..godded.."\n"..Functions.CommaValue(round(plr.Character:FindFirstChildOfClass('Humanoid').Health, 1))
+							TextLabel.Text = plr.Name..pos..newpage..alv..ff..godded.."\n"..Functions.CommaValue(Functions.Round(plr.Character:FindFirstChildOfClass('Humanoid').Health, 1))
                             if not Functions.IsGodded(plr.Character) then
                                 if plr.Character:FindFirstChildOfClass("Humanoid").Health > 0 and not plr.Character:FindFirstChildOfClass("ForceField") then
                                     local hp = math.clamp(plr.Character:FindFirstChildOfClass("Humanoid").Health/plr.Character:FindFirstChildOfClass("Humanoid").MaxHealth,0,1)
@@ -2101,8 +2151,6 @@ Functions.CreateMainTabs = function()
 
     local function HomeTab()
 
-        local suffixes = {'','K+','M+','B+','T+','qd+','Qn+','sx+','Sp+','O+','N+','de+','Ud+','DD+','tdD+','qdD+','QnD+','sxD+','SpD+','OcD+','NvD+','Vgn+','UVg+','DVg+','TVg+','qtV+','QnV+','SeV+','SPG+','OVG+','NVG+','TGN+','UTG+','DTG+','tsTG+','qtTG+','QnTG+','ssTG+','SpTG+','OcTG+','NoAG+','UnAG+','DuAG+','TeAG+','QdAG+','QnAG+','SxAG+','SpAG+','OcAG+','NvAG+','CT+'}
-
         local PlayerStats = {
             NinPlayer = nil;
             RepPlayer = nil;
@@ -2118,48 +2166,6 @@ Functions.CreateMainTabs = function()
                 end
             end
             return godcount
-        end
-
-        local function Format(Int)
-            return string.format("%02i", Int)
-        end
-
-        local function comma_value(n)
-            if tonumber(n) then
-                local left,num,right = string.match(n,'^([^%d]*%d)(%d*)(.-)$')
-                return left..(num:reverse():gsub('(%d%d%d)','%1,'):reverse())..right
-            else
-                return n
-            end
-        end
-
-        local function high_number_format(val)
-            if tonumber(val) then
-                local negative = false
-                if string.sub(val,1,1) == "-" then
-                    val = string.sub(val,2,string.len(val))
-                    negative = true
-                end
-                for i=1, #suffixes do
-                    if tonumber(val) < 10^(i*3) then
-                        local value = math.floor(val/((10^((i-1)*3))/100))/(100)..suffixes[i]
-                        if negative then value = "-"..value end
-                        return value
-                    end
-                end
-            else
-                return val
-            end
-        end
-
-        local function convertToHMS(text)
-            local text = tonumber(text)
-            local seconds = math.floor(text)
-            local minutes = math.floor(text / 60)
-            local hours = math.floor(text / 60 / 60)
-            local seconds = seconds - (minutes * 60)
-            local minutes = minutes - (hours * 60)
-            return Format(hours)..":"..Format(minutes)..":"..Format(seconds)
         end
 
         local function GetHighestValues()
@@ -2199,7 +2205,7 @@ Functions.CreateMainTabs = function()
         })
 
         local tab4 = HomeTab:AddParagraph({
-            Title = "Server Uptime: "..convertToHMS(time());
+            Title = "Server Uptime: "..Functions.ConvertToHMS(time());
         })
 
         local tab5 = HomeTab:AddParagraph({
@@ -2238,12 +2244,12 @@ Functions.CreateMainTabs = function()
             while task.wait(0.1) do
                 tab2:SetTitle("There are " ..#Players:GetPlayers().. "/" ..Players.MaxPlayers.. " players in the server")
                 tab3:SetTitle("There are " ..GetGoddedPlrs().. "/" ..#Players:GetPlayers().. " godded players")
-                tab4:SetTitle("Server Uptime: "..convertToHMS(time()))
+                tab4:SetTitle("Server Uptime: "..Functions.ConvertToHMS(time()))
                 if PlayerStats.NinPlayer then
-                    tab5:SetTitle("Highest nin player: " ..PlayerStats.NinPlayer.Name.. " with " ..comma_value(PlayerStats.NinPlayer.leaderstats.Ninjutsu.Value))
+                    tab5:SetTitle("Highest nin player: " ..PlayerStats.NinPlayer.Name.. " with " ..Functions.CommaValue(PlayerStats.NinPlayer.leaderstats.Ninjutsu.Value))
                 end
                 if PlayerStats.RepPlayer then
-                    tab6:SetTitle("Highest rep player: " ..PlayerStats.RepPlayer.Name.. " with " ..high_number_format(PlayerStats.RepPlayer.leaderstats.Reputation.Value))
+                    tab6:SetTitle("Highest rep player: " ..PlayerStats.RepPlayer.Name.. " with " ..Functions.HighNumberFormat(PlayerStats.RepPlayer.leaderstats.Reputation.Value))
                 end
             end
         end))
@@ -4476,7 +4482,7 @@ Functions.CreateMainTabs = function()
 
         -- // wip..
 
-        AddVariables({["SelectedPlayers"] = {}, ["ESP"] = false, ["Chams"] = false, ["WeaponESP"] = false, ["WeaponChams"] = false})
+        AddVariables({["SelectedPlayers"] = {}, ["ESP"] = false, ["Chams"] = false, ["WeaponESP"] = false, ["WeaponChams"] = false, ["ESPSettings"] = {['Distance'] = false, ['State'] = false, ['Bubble'] = false, ['Godded'] = false}})
 
         local PlayersDropdowns = Tabs.Players:AddSection("Dropdowns")
 
@@ -4545,6 +4551,228 @@ Functions.CreateMainTabs = function()
             end
         })
 
+        local PlayersToggles = Tabs.Players:AddSection("Toggles")
+
+        PlayersToggles:AddToggle("ESP",{
+            Title = "ESP";
+            Description = "Displays a player's name and certain info about the player above their head.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.ESP = true
+                    for i,_ in pairs(Variables.SelectedPlayers) do
+                        if Players:FindFirstChild(i) then
+                            Functions.ESP(Players:FindFirstChild(i))
+                        else
+                            Variables.SelectedPlayers[i] = nil
+                        end
+                    end
+                else
+                    pcall(function()
+                        Variables.ESP = false
+                        for _,c in pairs(CoreGui:GetChildren()) do
+                            if string.sub(c.Name, -4) == '_ESP' then
+                                c:Destroy()
+                            end
+                        end
+                    end)
+                end
+            end
+        })
+
+        PlayersToggles:AddToggle("Chams",{
+            Title = "Chams";
+            Description = "Displays where players are using your preferred method of chams. Default is BoxHandleAdornment.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.Chams = true
+                    for i,_ in pairs(Variables.SelectedPlayers) do
+                        if Players:FindFirstChild(i) then
+                            Functions.Chams(Players:FindFirstChild(i))
+                        else
+                            Variables.SelectedPlayers[i] = nil
+                        end
+                    end
+                else
+                    pcall(function()
+                        Variables.Chams = false
+                        for _,c in pairs(CoreGui:GetChildren()) do
+                            if string.sub(c.Name, -5) == '_CHMS' then
+                                c:Destroy()
+                            end
+                        end
+                    end)
+                end
+            end
+        })
+
+        PlayersToggles:AddToggle("WeaponESP",{
+            Title = "Weapon ESP";
+            Description = "Displays a player's weapon names when they take them out.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.WeaponESP = true
+                    for i,_ in pairs(Variables.SelectedPlayers) do
+                        if Players:FindFirstChild(i) then
+                            Functions.WeaponESP(Players:FindFirstChild(i))
+                        else
+                            Variables.SelectedPlayers[i] = nil
+                        end
+                    end
+                    Functions.WorkspaceDescendantAdded.WeaponESP = function(child)
+                        if not child:FindFirstChild("WeaponESP") and (((child.Name == "Shuriken" or child.Name == "Sword") and child:IsA("Tool") and Variables.SelectedPlayers[child.Parent.Name] and child.Parent.Name ~= Players.LocalPlayer.Name) or (child.Name == "ThrownKunai" and Variables.SelectedPlayers[child:WaitForChild("creator").Value.Name] and child:WaitForChild("creator").Value ~= Players.LocalPlayer)) then
+                            local function GetColorFromName(name)
+                                if child.Name == "Sword" then
+                                    return Color3.fromRGB(255, 167, 25)
+                                else
+                                    return Color3.fromRGB(255, 0, 0)
+                                end
+                            end
+                            local BillboardGui = Instance.new("BillboardGui")
+                            local TextLabel = Instance.new("TextLabel")
+                            if child:IsA("Tool") then
+                                BillboardGui.Adornee = child:FindFirstChild("Handle")
+                            else
+                                BillboardGui.Adornee = child
+                            end
+                            BillboardGui.Parent = child
+                            BillboardGui.Size = UDim2.new(0, 100, 0, 150)
+                            BillboardGui.StudsOffset = Vector3.new(0, 1, 0)
+                            BillboardGui.AlwaysOnTop = true
+                            BillboardGui.Name = "WeaponESP"
+                            TextLabel.Parent = BillboardGui
+                            TextLabel.BackgroundTransparency = 1
+                            TextLabel.Position = UDim2.new(0, 0, 0, -50)
+                            TextLabel.Size = UDim2.new(0, 100, 0, 100)
+                            TextLabel.Font = Enum.Font.SourceSansSemibold
+                            TextLabel.TextSize = 15
+                            TextLabel.TextColor3 = GetColorFromName(child.Name)
+                            TextLabel.TextStrokeTransparency = 0
+                            TextLabel.TextYAlignment = Enum.TextYAlignment.Bottom
+                            TextLabel.Text = child.Name
+                            TextLabel.ZIndex = 10
+                            TextLabel.Visible = true
+                        end
+                    end
+                    Functions.WorkspaceDescendantRemoved.WeaponESP = function(child)
+                        if ((child.Name == "Shuriken" or child.Name == "Sword") and child:IsA("Tool") and Variables.SelectedPlayers[child.Parent.Name] and child.Parent.Name ~= Players.LocalPlayer.Name) or (child.Name == "ThrownKunai" and Variables.SelectedPlayers[child:WaitForChild("creator").Value] and child:WaitForChild("creator").Value ~= Players.LocalPlayer) then
+                            if child:FindFirstChildOfClass("BillboardGui") then
+                                child:FindFirstChildOfClass("BillboardGui"):Destroy()
+                            end
+                        end
+                    end
+                else
+                    pcall(function()
+                        Variables.WeaponESP = false
+                        Functions.WorkspaceDescendantAdded.WeaponESP = nil
+                        Functions.WorkspaceDescendantRemoved.WeaponESP = nil
+                        for i,_ in pairs(Variables.SelectedPlayers) do
+                            if Players:FindFirstChild(i) and Players:FindFirstChild(i).Character then
+                                for i,v in pairs(Players:FindFirstChild(i).Character:GetChildren()) do
+                                    if v:FindFirstChild("WeaponESP") then
+                                        v:FindFirstChild("WeaponESP"):Destroy()
+                                    end
+                                end
+                            end
+                        end
+                    end)
+                end
+            end
+        })
+
+        PlayersToggles:AddToggle("WeaponChams",{
+            Title = "Weapon Chams";
+            Description = "Displays a player's weapon via box handle adornment when they take their weapons out.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.WeaponChams = true
+                    for i,_ in pairs(Variables.SelectedPlayers) do
+                        if Players:FindFirstChild(i) then
+                            Functions.WeaponChams(Players:FindFirstChild(i))
+                        else
+                            Variables.SelectedPlayers[i] = nil
+                        end
+                    end
+                    Functions.WorkspaceDescendantAdded.WeaponChams = function(child)
+                        if not child:FindFirstChild("WeaponChams") and (((child.Name == "Shuriken" or child.Name == "Sword") and child:IsA("Tool") and Variables.SelectedPlayers[child.Parent.Name] and child.Parent.Name ~= Players.LocalPlayer.Name) or (child.Name == "ThrownKunai" and Variables.SelectedPlayers[child:WaitForChild("creator").Value.Name] and child:WaitForChild("creator").Value ~= Players.LocalPlayer)) then
+                            local function GetColorFromName(name)
+                                if child.Name == "Sword" then
+                                    return Color3.fromRGB(255, 167, 25)
+                                else
+                                    return Color3.fromRGB(255, 0, 0)
+                                end
+                            end
+                            local a = Instance.new("BoxHandleAdornment")
+                            a.Name = "WeaponChams"
+                            a.Parent = child
+                            if child:IsA("Tool") then
+                                if child.Name == "Sword" then
+                                    a.Adornee = child:FindFirstChild("Handle")
+                                    a.Size = child:FindFirstChild("Handle").Size
+                                else
+                                    a.Adornee = child:FindFirstChild("Handle")
+                                    a.Size = Vector3.new(1.5,0.5,1.5)
+                                end
+                            else
+                                a.Adornee = child
+                                a.Size = Vector3.new(1.5,0.5,1.5)
+                            end
+                            a.AlwaysOnTop = true
+                            a.ZIndex = 10
+                            a.Transparency = 0.3
+                            a.Color3 = GetColorFromName(child.Name)
+                            a.Visible = true
+                        end
+                    end
+                    Functions.WorkspaceDescendantRemoved.WeaponChams = function(child)
+                        if ((child.Name == "Shuriken" or child.Name == "Sword") and child:IsA("Tool") and Variables.SelectedPlayers[child.Parent.Name] and child.Parent.Name ~= Players.LocalPlayer.Name) or (child.Name == "ThrownKunai" and Variables.SelectedPlayers[child:WaitForChild("creator").Value] and child:WaitForChild("creator").Value ~= Players.LocalPlayer) then
+                            if child:FindFirstChildOfClass("BoxHandleAdornment") then
+                                child:FindFirstChildOfClass("BoxHandleAdornment"):Destroy()
+                            end
+                        end
+                    end
+                else
+                    pcall(function()
+                        Variables.WeaponChams = false
+                        Functions.WorkspaceDescendantAdded.WeaponChams = nil
+                        Functions.WorkspaceDescendantRemoved.WeaponChams = nil
+                        for i,_ in pairs(Variables.SelectedPlayers) do
+                            if Players:FindFirstChild(i) and Players:FindFirstChild(i).Character then
+                                for i,v in pairs(Players:FindFirstChild(i).Character:GetChildren()) do
+                                    if v:FindFirstChild("WeaponChams") then
+                                        v:FindFirstChild("WeaponChams"):Destroy()
+                                    end
+                                end
+                            end
+                        end
+                    end)
+                end
+            end;
+        })
+
+        local PlayersSettings = Tabs.Players:AddSection("Settings")
+
+        PlayersSettings:AddDropdown("ESPSettings",{
+            Title = "ESP Settings";
+            Description = "Settings for ESP";
+            Values = Constants.ESPText;
+            Multi = true;
+            Default = {};
+        })
+
+        Options.ESPSettings:OnChanged(function(Values)
+            for i,v in pairs(Variables.ESPSettings) do
+                if Values[i] then
+                    Variables.ESPSettings[i] = true
+                else
+                    Variables.ESPSettings[i] = false
+                end
+            end
+        end)
+
     end
 
     TouchedFuncs()
@@ -4595,9 +4823,9 @@ Functions.StartMainConnections = function()
         for _,v in pairs(Functions.PlayerAdded) do
             v(player)
         end
-        --[[if Variables.SelectedPlayers[player.Name] then
+        if Variables.SelectedPlayers[player.Name] then
             Functions.AddPlayerVanities(player)
-        end]]
+        end
     end)
     
     Players.PlayerRemoving:Connect(function(player)
