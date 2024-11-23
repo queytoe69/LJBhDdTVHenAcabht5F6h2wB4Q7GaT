@@ -31,13 +31,11 @@ Functions.CharacterTouched = {}
 Functions.WhitelistCharacterTouched = {}
 Functions.WorkspaceDescendantAdded = {}
 Functions.WorkspaceDescendantRemoved = {}
-Functions.Heartbeat = {}
-Functions.RenderStepped = {}
-Functions.Stepped = {}
 
 local Constants = {
     BodyParts = {"Head","HumanoidRootPart","UpperTorso","LowerTorso","RightUpperArm","LeftUpperArm","RightLowerArm","LeftLowerArm","RightHand","LeftHand","RightUpperLeg","LeftUpperLeg","RightLowerLeg","LeftLowerLeg","RightFoot", "LeftFoot"};
     Modes = {'Soft', 'Semi', 'Normal', 'Permanent'};
+    Weapons = {'Sword', 'Shuriken', 'Teleport'};
 }
 
 local Lists = {
@@ -89,28 +87,10 @@ local AutoExecuteFuncs = {
             end)
         end]]
     end;
-    --[[StatsImprover = function()
+    StatsImprover = function()
+        if not CoreGui:FindFirstChild("RoactAppExperimentProvider") or not CoreGui.RoactAppExperimentProvider:FindFirstChild("Children") then return end
 
-            --Update Player Stats
-            local function updatePlayerStats(player)
-                if player:FindFirstChild("leaderstats") then
-                    for_, stat in ipairs (player.leaderstats:GetChildren()) do
-                        stat:GetPropertyChangedSignal("Value"):Connect(function()
-                        updateTeamStats()
-                    end)
-                end
-            end
-        end
-
-        -- Attach Listeners
-        Players.PlayerAdded:Connect(updatePlayerStats)
-        for _, player in ipairs (Players:GetPlayers()) do
-            updatePlayerStats(player)
-        end
-        end;
-        }
-
-        -- Tried and gave up 💀 - Dark_Turns
+        repeat task.wait() until Players.LocalPlayer:FindFirstChild("leaderstats")
 
         local numofstats = 0
         for i,v in ipairs(Players.LocalPlayer:FindFirstChild("leaderstats"):GetChildren()) do
@@ -119,11 +99,11 @@ local AutoExecuteFuncs = {
         local numnum = numofstats * 110
         local xvalue = numnum + 172
         local divxvalue = xvalue - 110
-        local coregui = game:GetService("CoreGui")
+        local coregui = CoreGui
         local playerlist = coregui:FindFirstChild("RoactAppExperimentProvider") or coregui:FindFirstChild("PlayerList")
         local Teams = game:GetService("Teams")
         local plrlistmaster = playerlist:FindFirstChild("PlayerListMaster") or playerlist:FindFirstChild("Children")
-        local offsetframe = plrlistmaster:FindFirstChild("OffsetFrame") or playerlistmaster:FindFirstChild("Children") -- among us
+        local offsetframe = plrlistmaster:FindFirstChild("OffsetFrame") or playerlistmaster:FindFirstChild("Children")
         local plrsandteams = plrlistmaster.OffsetFrame.PlayerScrollList.SizeOffsetFrame.ScrollingFrameContainer.ScrollingFrameClippingFrame.ScollingFrame.OffsetUndoFrame
         local titlebar = plrlistmaster.OffsetFrame.PlayerScrollList.SizeOffsetFrame:WaitForChild("TitleBar")
         local suffixes = {'','K+','M+','B+','T+','qd+','Qn+','sx+','Sp+','O+','N+','de+','Ud+','DD+','tdD+','qdD+','QnD+','sxD+','SpD+','OcD+','NvD+','Vgn+','UVg+','DVg+','TVg+','qtV+','QnV+','SeV+','SPG+','OVG+','NVG+','TGN+','UTG+','DTG+','tsTG+','qtTG+','QnTG+','ssTG+','SpTG+','OcTG+','NoAG+','UnAG+','DuAG+','TeAG+','QdAG+','QnAG+','SxAG+','SpAG+','OcAG+','NvAG+','CT+'}
@@ -342,29 +322,7 @@ local AutoExecuteFuncs = {
                 UpdatePlayerListSize()
             end
         end)
-
-        local Players = game:GetService("Players")
-        local CoreGui = game:GetService("CoreGui")
-        local Teams = game:GetService("Teams")
-
-        local suffixes = {
-           "", "K+", "M+", "B+", "T+", "qd+", "Qn+", "sx+", "Sp+", "O+", "N+", "de+", 
-            "Ud+", "DD+", "tdD+", "qdD+", "QnD+", "sxD+", "SpD+", "OcD+", "NvD+", "Vgn+", 
-            "UVg+", "DVg+", "TVg+", "qtV+", "QnV+", "SeV+", "SPG+", "OVG+", "NVG+", "TGN+",
-            "UTG+", "DTG+", "tsTG+", "qtTG+", "QnTG+", "ssTG+", "SpTG+", "OcTG+", "NoAG+",
-            "UnAG+", "DuAG+", "TeAG+", "QdAG+", "QnAG+", "SxAG+", "SpAG+", "OcAG+", "NvAG+", "CT+"
-        }
-        local function formatNumber(value)
-            if tonumber(value) then
-                for i = 1, #suffixes do
-                    if tonumber(value) < 10 ^ (i * 3) then
-                        return math.floor(value / (10 ^ ((i - 1) * 3)) * 100) / 100 .. suffixes[i]
-                    end
-                end
-            end
-        end
-        return teamValues
-    end;]]
+    end;
     Spy = function()
         enabled = true
         spyOnMyself = true
@@ -617,24 +575,9 @@ local AutoExecuteFuncs = {
         RunService.Heartbeat:Connect(HeartbeatUpdate)
     end;
     AntiMobileGlitch = function()
-        task.spawn(function()
-            for i,v in pairs(Players.LocalPlayer.PlayerGui:GetChildren()) do
-                if v.Name == "ScreenGui" and v:FindFirstChild("Frame") then
-                    v:Destroy()
-                end
-            end
-            repeat task.wait() until Players.LocalPlayer.PlayerGui:FindFirstChild("PlayerScript")
-            local clone = Players.LocalPlayer.PlayerGui.PlayerScript:Clone()
-            clone.Parent = Players.LocalPlayer.PlayerGui
-            repeat task.wait() until Players.LocalPlayer.PlayerGui:FindFirstChild("GuiScript")
-            local clone2 = Players.LocalPlayer.PlayerGui.GuiScript:Clone()
-            clone2.Parent = Players.LocalPlayer.PlayerGui
-            return
-        end)
-        Functions.CharacterAdded.AntiMobileGlitch = function()
+        if UserInputService.TouchEnabled then
             task.spawn(function()
-                Functions.CheckAllParts(Character)
-                for i,v in pairs(Player.PlayerGui:GetChildren()) do
+                for i,v in pairs(Players.LocalPlayer.PlayerGui:GetChildren()) do
                     if v.Name == "ScreenGui" and v:FindFirstChild("Frame") then
                         v:Destroy()
                     end
@@ -645,7 +588,24 @@ local AutoExecuteFuncs = {
                 repeat task.wait() until Players.LocalPlayer.PlayerGui:FindFirstChild("GuiScript")
                 local clone2 = Players.LocalPlayer.PlayerGui.GuiScript:Clone()
                 clone2.Parent = Players.LocalPlayer.PlayerGui
+                return
             end)
+            Functions.CharacterAdded.AntiMobileGlitch = function()
+                task.spawn(function()
+                    Functions.CheckAllParts(Character)
+                    for i,v in pairs(Player.PlayerGui:GetChildren()) do
+                        if v.Name == "ScreenGui" and v:FindFirstChild("Frame") then
+                            v:Destroy()
+                        end
+                    end
+                    repeat task.wait() until Players.LocalPlayer.PlayerGui:FindFirstChild("PlayerScript")
+                    local clone = Players.LocalPlayer.PlayerGui.PlayerScript:Clone()
+                    clone.Parent = Players.LocalPlayer.PlayerGui
+                    repeat task.wait() until Players.LocalPlayer.PlayerGui:FindFirstChild("GuiScript")
+                    local clone2 = Players.LocalPlayer.PlayerGui.GuiScript:Clone()
+                    clone2.Parent = Players.LocalPlayer.PlayerGui
+                end)
+            end
         end
     end;
     AutoTranslator = function()
@@ -655,6 +615,7 @@ local AutoExecuteFuncs = {
             ZERO Credits to Riptxde for the sending chathook
         --]]
 
+        if not getrawmetatable then return end
         if not game['Loaded'] then game['Loaded']:Wait() end; repeat wait(.06) until game:GetService('Players').LocalPlayer ~= nil
         local YourLang = "en" -- Language code that the messages are going to be translated to
 
@@ -1092,6 +1053,8 @@ local AutoExecuteFuncs = {
         end)
     end;
     Cutestring = function()
+        if not getrawmetatable then return end
+
         getgenv().Meow = false
 
         faces = {
@@ -1137,50 +1100,52 @@ local AutoExecuteFuncs = {
     end;
     ChatFixer = function()
 
-        game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.Size = UDim2.new(0.35,0,0.45,0)
+        if UserInputService.TouchEnabled then
+            game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.Size = UDim2.new(0.35,0,0.45,0)
 
-        local scroller = game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatChannelParentFrame.Frame_MessageLogDisplay.Scroller
-        scroller.AutomaticCanvasSize = Enum.AutomaticSize.Y
+            local scroller = game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatChannelParentFrame.Frame_MessageLogDisplay.Scroller
+            scroller.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
-        for i,v in pairs(scroller:GetChildren()) do
-            v.Size = UDim2.new(1,0,0,84)
-            v.TextLabel.TextSize = 16
-            if v.TextLabel:FindFirstChild("TextButton") then
-                v.TextLabel.TextButton.TextSize = 16
-            end
-            v.Size = UDim2.new(1,0,0,v.TextLabel.TextBounds.Y)
-            task.wait()
-            if not v.TextLabel.TextFits then
-                v.TextLabel.RichText = true
-            end
-        end
-
-        scroller.ChildAdded:Connect(function(child)
-
-            local alls = 0
             for i,v in pairs(scroller:GetChildren()) do
-                if v and v:IsA("Frame") then
-                    alls = v.Size.Y.Offset + alls
+                v.Size = UDim2.new(1,0,0,84)
+                v.TextLabel.TextSize = 16
+                if v.TextLabel:FindFirstChild("TextButton") then
+                    v.TextLabel.TextButton.TextSize = 16
                 end
-                if not v then
-                    alls = 0
+                v.Size = UDim2.new(1,0,0,v.TextLabel.TextBounds.Y)
+                task.wait()
+                if not v.TextLabel.TextFits then
+                    v.TextLabel.RichText = true
                 end
             end
 
-            child.Size = UDim2.new(1,0,0,84)
-            child.Position = UDim2.new(1,0,0,alls)
-            child.TextLabel.TextSize = 16
-            if child.TextLabel:FindFirstChild("TextButton") then
-                child.TextLabel.TextButton.TextSize = 16
-            end
-            child.Size = UDim2.new(1,0,0,child.TextLabel.TextBounds.Y)
-            task.wait()
-            --scroller.CanvasSize = UDim2.new(0,0,0,alls+child.TextLabel.TextBounds.Y)
-            if not child.TextLabel.TextFits then
-                child.TextLabel.RichText = true
-            end
-            scroller.CanvasPosition = Vector2.new(0,scroller.AbsoluteCanvasSize.Y-scroller.AbsoluteWindowSize.Y)
-        end)
+            scroller.ChildAdded:Connect(function(child)
+
+                local alls = 0
+                for i,v in pairs(scroller:GetChildren()) do
+                    if v and v:IsA("Frame") then
+                        alls = v.Size.Y.Offset + alls
+                    end
+                    if not v then
+                        alls = 0
+                    end
+                end
+
+                child.Size = UDim2.new(1,0,0,84)
+                child.Position = UDim2.new(1,0,0,alls)
+                child.TextLabel.TextSize = 16
+                if child.TextLabel:FindFirstChild("TextButton") then
+                    child.TextLabel.TextButton.TextSize = 16
+                end
+                child.Size = UDim2.new(1,0,0,child.TextLabel.TextBounds.Y)
+                task.wait()
+                --scroller.CanvasSize = UDim2.new(0,0,0,alls+child.TextLabel.TextBounds.Y)
+                if not child.TextLabel.TextFits then
+                    child.TextLabel.RichText = true
+                end
+                scroller.CanvasPosition = Vector2.new(0,scroller.AbsoluteCanvasSize.Y-scroller.AbsoluteWindowSize.Y)
+            end)
+        end
 
     end;
     SolaraFixer = function()
@@ -1258,14 +1223,14 @@ local AutoExecuteFuncs = {
 }
 
 local TableFuncs = {
-    ["AutoFire"] = {
+    AutoFire = {
 
         --[[ 
             0 = false, 1 = true
             1st = AirStrikeMode, 2nd = PredictMode, 3rd = ServerShurikens, 4th = ShotgunFire
         --]]
 
-        ["0000"] = function()
+        ["0000"] = function(targetplr)
             if Character and Character:FindFirstChild("Shuriken") then
                 for i,v in pairs(Character:GetChildren()) do
                     if v.Name == "Shuriken" and targetplr and targetplr.Character and targetplr.Character:FindFirstChild(Variables.AimPart) then
@@ -1281,7 +1246,7 @@ local TableFuncs = {
                 end
             end
         end;
-        ["1000"] = function()
+        ["1000"] = function(targetplr)
             if Character and Character:FindFirstChild("Shuriken") and Functions.GetRoot(Character) then
                 local hrp = Functions.GetRoot(Character)
                 for i,v in pairs(Character:GetChildren()) do
@@ -1300,7 +1265,7 @@ local TableFuncs = {
                 end
             end
         end;
-        ["0100"] = function()
+        ["0100"] = function(targetplr)
             if workspace:FindFirstChild("SPEEDPART") then
                 if Character and Character:FindFirstChild("Shuriken") then
                     for i,v in pairs(Character:GetChildren()) do
@@ -1320,7 +1285,7 @@ local TableFuncs = {
                 end
             end
         end;
-        ["0010"] = function(Step)
+        ["0010"] = function(targetplr,Step)
             for i,v in pairs(Players:GetPlayers()) do
                 if (Variables.PlayerShurikenCheck and v ~= targetplr) or (not Variables.PlayerShurikenCheck) then
                     if v:FindFirstChild("Backpack") and v.Backpack:FindFirstChild("Shuriken") then
@@ -1342,7 +1307,7 @@ local TableFuncs = {
                 end
             end
         end;
-        ["0001"] = function()
+        ["0001"] = function(targetplr)
             if Character and Character:FindFirstChild("Shuriken") then
                 for i,v in pairs(Character:GetChildren()) do
                     if v.Name == "Shuriken" and targetplr and targetplr.Character and targetplr.Character:FindFirstChild(Variables.AimPart) then
@@ -1368,7 +1333,7 @@ local TableFuncs = {
                 end
             end
         end;
-        ["0011"] = function(Step)
+        ["0011"] = function(targetplr,Step)
             for i,v in pairs(Players:GetPlayers()) do
                 if (Variables.PlayerShurikenCheck and v ~= targetplr) or (not Variables.PlayerShurikenCheck) then
                     if v:FindFirstChild("Backpack") and v.Backpack:FindFirstChild("Shuriken") then
@@ -1400,7 +1365,7 @@ local TableFuncs = {
                 end
             end
         end;
-        ["1010"] = function(Step)
+        ["1010"] = function(targetplr,Step)
             if Character and Functions.GetRoot(Character) then
                 local hrp = Functions.GetRoot(Character)
                 for i,v in pairs(Players:GetPlayers()) do
@@ -1425,7 +1390,7 @@ local TableFuncs = {
                 end
             end
         end;
-        ["1001"] = function()
+        ["1001"] = function(targetplr)
             if Character and Functions.GetRoot(Character) then
                 local hrp = Functions.GetRoot(Character)
                 if Character and Character:FindFirstChild("Shuriken") then
@@ -1450,7 +1415,7 @@ local TableFuncs = {
                 end
             end
         end;
-        ["1011"] = function(Step)
+        ["1011"] = function(targetplr,Step)
             if Character and Functions.GetRoot(Character) then
                 local hrp = Functions.GetRoot(Character)
                 for i,v in pairs(Players:GetPlayers()) do
@@ -1488,7 +1453,7 @@ local MainWindow =
     Fluent:CreateWindow(
     {
         Title = "Project Ninja Assassin v" .. VERSION,
-        SubTitle = "by 5 Big Guys and they grab on yo thighs",
+        SubTitle = "by 5 Big Guys",
         TabWidth = 160,
         Size = UDim2.fromOffset(580, 460),
         Acrylic = true,
@@ -1498,11 +1463,11 @@ local MainWindow =
 )
 
 local Tabs = {
-    Main = MainWindow:AddTab({Title = "Main", Icon = "house"}),
+    Home = MainWindow:AddTab({Title = "Home", Icon = "home"}),
     Training = MainWindow:AddTab({ Title = "Training", Icon = "axe" }),
     Lists = MainWindow:AddTab({ Title = "Lists", Icon = "scroll" }),
-    Players = MainWindow:AddTab({ Title = "Players", Icon = "user-cog" }),
     Combat = MainWindow:AddTab({Title = "Combat", Icon = "swords"}),
+    Players = MainWindow:AddTab({ Title = "Players", Icon = "user-cog" }),
     Cosmetics = MainWindow:AddTab({Title = "Cosmetics", Icon = "shirt"}),
     Misc = MainWindow:AddTab({Title = "Miscellaneous", Icon = "folder-plus"}),
     Credits = MainWindow:AddTab({Title = "Credits", Icon = "link-2"}),
@@ -1514,6 +1479,10 @@ local function AddVariables(Tab)
         local Value = Value or false
         Variables[Name] = Value
     end
+end
+
+Functions.Chat = function(message)
+    game.StarterGui:SetCore("ChatMakeSystemMessage", {Text = message, Color = Color3.fromRGB(0,255,40), Font = Enum.Font.Fantasy})
 end
 
 Functions.GetRoot = function(char)
@@ -1677,7 +1646,7 @@ Functions.ListClear = function(List,Mode)
     end
 end
 
-Functions.ListPlayerInServer = function(List)
+Functions.IsListPlayerInServer = function(List)
     for n,t in pairs(Lists[List]) do
         for w,p in pairs(t) do
             if Players:FindFirstChild(p) then
@@ -1714,6 +1683,257 @@ Functions.PlayersToStrings = function(tbl)
         table.insert(temptab,v.Name)
     end
     return temptab
+end
+
+Functions.ESP = function(plr)
+	task.spawn(function()
+		for i,v in pairs(CoreGui:GetChildren()) do
+			if v.Name == plr.Name..'_PNAESP' then
+				v:Destroy()
+			end
+		end
+		task.wait(0.03)
+		if plr.Character and plr.Name ~= Players.LocalPlayer.Name and not CoreGui:FindFirstChild(plr.Name..'_PNAESP') then
+			local ESPholder = Instance.new("Folder")
+			ESPholder.Name = plr.Name..'_PNAESP'
+			ESPholder.Parent = CoreGui
+			Functions.CheckAllParts(plr.Character)
+			if plr.Character:FindFirstChild('Head') then
+				local BillboardGui = Instance.new("BillboardGui")
+				local TextLabel = Instance.new("TextLabel")
+				BillboardGui.Adornee = plr.Character.Head
+				BillboardGui.Name = plr.Name
+				BillboardGui.Parent = ESPholder
+				BillboardGui.Size = UDim2.new(0, 100, 0, 150)
+				BillboardGui.StudsOffset = Vector3.new(0, 1, 0)
+				BillboardGui.AlwaysOnTop = true
+				TextLabel.Parent = BillboardGui
+				TextLabel.BackgroundTransparency = 1
+				TextLabel.Position = UDim2.new(0, 0, 0, -50)
+				TextLabel.Size = UDim2.new(0, 100, 0, 100)
+				TextLabel.Font = Enum.Font.SourceSansSemibold
+				TextLabel.TextSize = 20
+				TextLabel.TextColor3 = Color3.new(1, 1, 1)
+				TextLabel.TextStrokeTransparency = 0
+				TextLabel.TextYAlignment = Enum.TextYAlignment.Bottom
+				TextLabel.Text = 'Name: '..plr.Name
+				TextLabel.ZIndex = 10
+				local espLoopFunc
+				local addedFunc
+				addedFunc = plr.CharacterAdded:Connect(function()
+					if Variables.ESP then
+						espLoopFunc:Disconnect()
+						ESPholder:Destroy()
+						Functions.CheckAllParts(plr.Character)
+						Functions.ESP(plr)
+						addedFunc:Disconnect()
+					else
+						addedFunc:Disconnect()
+					end
+				end)
+				local function espLoop()
+					if CoreGui:FindFirstChild(plr.Name..'_PNAESP') then
+						if plr.Character and Functions.GetRoot(plr.Character) and plr.Character:FindFirstChildOfClass("Humanoid") and Players.LocalPlayer.Character and Functions.GetRoot(Players.LocalPlayer.Character) and Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+							local pos = ""
+                            local alv = ""
+                            local ff = ""
+                            local godded = ""
+                            local newpage = ""
+                            if Tables.Settings.ESPSettings.Distance then
+                                pos = " | "..Functions.CommaValue(math.floor((Functions.GetRoot(Players.LocalPlayer.Character).Position - Functions.GetRoot(plr.Character).Position).Magnitude)).." Studs away"
+                            end
+                            if Tables.Settings.ESPSettings.Godded then
+                                if Functions.IsGodded(plr.Character) then
+                                    godded = " | Godded"
+                                else
+                                    godded = " | Not Godded"
+                                end
+                                newpage = "\n"
+                            end
+                            if Tables.Settings.ESPSettings.Bubble then
+                                if plr.Character:FindFirstChildOfClass("ForceField") then
+                                    ff = " | Has Bubble"
+                                else
+                                    ff = " | No Bubble"
+                                end
+                                newpage = "\n"
+                            end
+                            if Tables.Settings.ESPSettings.State then
+                                if plr.Character:FindFirstChildOfClass("Humanoid") and plr.Character:FindFirstChildOfClass("Humanoid").Health <= 0 then
+                                    alv = "Dead"
+                                elseif plr.Character:FindFirstChildOfClass("Humanoid") then
+                                    alv = "Alive"
+                                else
+                                    alv = "Unknown"
+                                end
+                                newpage = "\n"
+                            end
+							TextLabel.Text = plr.Name..pos..newpage..alv..ff..godded.."\n"..Functions.CommaValue(round(plr.Character:FindFirstChildOfClass('Humanoid').Health, 1))
+                            if not Functions.IsGodded(plr.Character) then
+                                if plr.Character:FindFirstChildOfClass("Humanoid").Health > 0 and not plr.Character:FindFirstChildOfClass("ForceField") then
+                                    local hp = math.clamp(plr.Character:FindFirstChildOfClass("Humanoid").Health/plr.Character:FindFirstChildOfClass("Humanoid").MaxHealth,0,1)
+                                    TextLabel.TextColor3 = Color3.fromHSV(hp/3,1,1)
+                                else
+                                    TextLabel.TextColor3 = Color3.fromRGB(255,0,0)
+                                end
+                            else
+                                TextLabel.TextColor3 = Color3.fromRGB(13, 105, 172)
+                            end
+                        end
+					else
+						addedFunc:Disconnect()
+						espLoopFunc:Disconnect()
+					end
+				end
+				espLoopFunc = RunService.RenderStepped:Connect(espLoop)
+			end
+		end
+	end)
+end
+
+Functions.Chams = function(plr)
+    task.spawn(function()
+		for i,v in pairs(CoreGui:GetChildren()) do
+			if v.Name == plr.Name..'_PNACHMS' then
+				v:Destroy()
+			end
+		end
+		task.wait(0.03)
+		if plr.Character and plr.Name ~= Players.LocalPlayer.Name and not CoreGui:FindFirstChild(plr.Name..'_PNACHMS') then
+			local ESPholder = Instance.new("Folder")
+            local allBoxHandles = {}
+			ESPholder.Name = plr.Name..'_PNACHMS'
+			ESPholder.Parent = CoreGui
+			Functions.CheckAllParts(plr.Character)
+			for b,n in pairs (plr.Character:GetChildren()) do
+				if (n:IsA("BasePart")) then
+					local a = Instance.new("BoxHandleAdornment")
+					a.Name = plr.Name
+					a.Parent = ESPholder
+					a.Adornee = n
+					a.AlwaysOnTop = true
+					a.ZIndex = 10
+					a.Size = n.Size
+					a.Transparency = 0.3
+					a.Color3 = Color3.new(1,1,1)
+                    table.insert(allBoxHandles,a)
+				end
+			end
+			local chamsAddedFunc
+			local chamsLoopFunc
+			chamsAddedFunc = plr.CharacterAdded:Connect(function()
+				if Variables.Chams then
+					ESPholder:Destroy()
+					Functions.CheckAllParts(plr.Character)
+					Functions.Chams(plr)
+					chamsAddedFunc:Disconnect()
+				else
+					chamsAddedFunc:Disconnect()
+				end
+			end)
+            local function chamsLoop()
+                if CoreGui:FindFirstChild(plr.Name..'_PNACHMS') then
+                    if plr.Character and Functions.GetRoot(plr.Character) and plr.Character:FindFirstChildOfClass("Humanoid") then
+                        local alv = plr.Character:FindFirstChildOfClass("Humanoid").Health > 0
+                        local ff = plr.Character:FindFirstChildOfClass("ForceField")
+                        local godded = Functions.IsGodded(plr.Character)
+                        for i,v in pairs(allBoxHandles) do
+                            if not godded then
+                                if alv and not ff then
+                                    local hp = math.clamp(plr.Character:FindFirstChildOfClass("Humanoid").Health/plr.Character:FindFirstChildOfClass("Humanoid").MaxHealth,0,1)
+                                    v.Color3 = Color3.fromHSV(hp/3,1,1)
+                                else
+                                    v.Color3 = Color3.fromRGB(255,0,0)
+                                end
+                            else
+                                v.Color3 = Color3.fromRGB(13, 105, 172)
+                            end
+                        end
+                    end
+                else
+                    chamsAddedFunc:Disconnect()
+                    chamsLoopFunc:Disconnect()
+                end
+            end
+            chamsLoopFunc = RunService.RenderStepped:Connect(chamsLoop)
+		end
+	end)
+end
+
+Functions.WeaponESP = function(plr)
+    if plr.Character and plr ~= Players.LocalPlayer then
+        for i,child in pairs(plr.Character:GetChildren()) do
+            if ((child.Name == "Shuriken" or child.Name == "Sword") and child:IsA("Tool")) and not child:FindFirstChild("WeaponESP") then
+                local function GetColorFromName(name)
+                    if child.Name == "Sword" then
+                        return Color3.fromRGB(255, 167, 25)
+                    else
+                        return Color3.fromRGB(255, 0, 0)
+                    end
+                end
+                local BillboardGui = Instance.new("BillboardGui")
+                local TextLabel = Instance.new("TextLabel")
+                BillboardGui.Adornee = child
+                BillboardGui.Parent = child
+                BillboardGui.Size = UDim2.new(0, 100, 0, 150)
+                BillboardGui.StudsOffset = Vector3.new(0, 1, 0)
+                BillboardGui.AlwaysOnTop = true
+                BillboardGui.Name = "WeaponESP"
+                TextLabel.Parent = BillboardGui
+                TextLabel.BackgroundTransparency = 1
+                TextLabel.Position = UDim2.new(0, 0, 0, -50)
+                TextLabel.Size = UDim2.new(0, 100, 0, 100)
+                TextLabel.Font = Enum.Font.SourceSansSemibold
+                TextLabel.TextSize = 15
+                TextLabel.TextColor3 = GetColorFromName(child.Name)
+                TextLabel.TextStrokeTransparency = 0
+                TextLabel.TextYAlignment = Enum.TextYAlignment.Bottom
+                TextLabel.Text = child.Name
+                TextLabel.ZIndex = 10
+                TextLabel.Visible = true
+            end
+        end
+    end
+end
+
+Functions.WeaponChams = function(plr)
+    if plr.Character and plr ~= Players.LocalPlayer then
+        for i,child in pairs(plr.Character:GetChildren()) do
+            if ((child.Name == "Shuriken" or child.Name == "Sword") and child:IsA("Tool")) and not child:FindFirstChild("WeaponChams") then
+                local function GetColorFromName(name)
+                    if child.Name == "Sword" then
+                        return Color3.fromRGB(255, 167, 25)
+                    else
+                        return Color3.fromRGB(255, 0, 0)
+                    end
+                end
+                local a = Instance.new("BoxHandleAdornment")
+                a.Name = "WeaponChams"
+                a.Parent = child
+                a.Adornee = child:FindFirstChild("Handle")
+                if child.Name == "Sword" then
+                    a.Size = child:FindFirstChild("Handle").Size
+                else
+                    a.Size = Vector3.new(1.5,0.5,1.5)
+                end
+                a.AlwaysOnTop = true
+                a.ZIndex = 10
+                a.Transparency = 0.3
+                a.Color3 = GetColorFromName(child.Name)
+                a.Visible = true
+            end
+        end
+    end
+end
+
+Functions.AddPlayerVanities = function(plr,dupeCheck)
+    repeat task.wait() until plr.Character
+    if Variables.ESP and (not dupeCheck or (dupeCheck and not CoreGui:FindFirstChild(plr.Name.."_PNAESP"))) then
+        Functions.ESP(plr)
+    end
+    if Variables.Chams and (not dupeCheck or (dupeCheck and not CoreGui:FindFirstChild(plr.Name.."_PNACHMS"))) then
+        Functions.Chams(plr)
+    end
 end
 
 Functions.RemovePlayerVanities = function(plr)
@@ -1761,7 +1981,7 @@ end
 
 Functions.GetTargetPlayer = function()
     local Player = nil
-    if not Functions.ListEmpty("Targetlist") and Functions.ListPlayerInServer("Targetlist") then
+    if not Functions.ListEmpty("Targetlist") and Functions.IsListPlayerInServer("Targetlist") then
         for n,t in pairs(Lists.Targetlist) do
             for w,p in pairs(t) do
                 if Players:FindFirstChild(p) then
@@ -1772,7 +1992,7 @@ Functions.GetTargetPlayer = function()
                 end
             end
         end
-    elseif not Functions.ListEmpty("Blacklist") and Functions.ListPlayerInServer("Blacklist") then
+    elseif not Functions.ListEmpty("Blacklist") and Functions.IsListPlayerInServer("Blacklist") then
         for i,name in pairs(Lists.Blacklist) do
             if Players:FindFirstChild(name) then
                 local v = Players:FindFirstChild(name)
@@ -1879,6 +2099,157 @@ Functions.CreateMainTabs = function()
 
     end
 
+    local function HomeTab()
+
+        local suffixes = {'','K+','M+','B+','T+','qd+','Qn+','sx+','Sp+','O+','N+','de+','Ud+','DD+','tdD+','qdD+','QnD+','sxD+','SpD+','OcD+','NvD+','Vgn+','UVg+','DVg+','TVg+','qtV+','QnV+','SeV+','SPG+','OVG+','NVG+','TGN+','UTG+','DTG+','tsTG+','qtTG+','QnTG+','ssTG+','SpTG+','OcTG+','NoAG+','UnAG+','DuAG+','TeAG+','QdAG+','QnAG+','SxAG+','SpAG+','OcAG+','NvAG+','CT+'}
+
+        local PlayerStats = {
+            NinPlayer = nil;
+            RepPlayer = nil;
+        }
+
+        local function GetGoddedPlrs()
+            local godcount = 0
+            for i,v in pairs(Players:GetPlayers()) do
+                if v.Character and v.Character:FindFirstChild("Humanoid") then
+                    if v.Character.Humanoid.Health >= 10000000000000000 then
+                        godcount += 1
+                    end
+                end
+            end
+            return godcount
+        end
+
+        local function Format(Int)
+            return string.format("%02i", Int)
+        end
+
+        local function comma_value(n)
+            if tonumber(n) then
+                local left,num,right = string.match(n,'^([^%d]*%d)(%d*)(.-)$')
+                return left..(num:reverse():gsub('(%d%d%d)','%1,'):reverse())..right
+            else
+                return n
+            end
+        end
+
+        local function high_number_format(val)
+            if tonumber(val) then
+                local negative = false
+                if string.sub(val,1,1) == "-" then
+                    val = string.sub(val,2,string.len(val))
+                    negative = true
+                end
+                for i=1, #suffixes do
+                    if tonumber(val) < 10^(i*3) then
+                        local value = math.floor(val/((10^((i-1)*3))/100))/(100)..suffixes[i]
+                        if negative then value = "-"..value end
+                        return value
+                    end
+                end
+            else
+                return val
+            end
+        end
+
+        local function convertToHMS(text)
+            local text = tonumber(text)
+            local seconds = math.floor(text)
+            local minutes = math.floor(text / 60)
+            local hours = math.floor(text / 60 / 60)
+            local seconds = seconds - (minutes * 60)
+            local minutes = minutes - (hours * 60)
+            return Format(hours)..":"..Format(minutes)..":"..Format(seconds)
+        end
+
+        local function GetHighestValues()
+
+            PlayerStats.NinPlayer = nil
+            PlayerStats.RepPlayer = nil
+
+            for i,v in pairs(Players:GetPlayers()) do
+                if v:FindFirstChild("leaderstats") then
+                    if PlayerStats.NinPlayer and v.leaderstats.Ninjutsu.Value > PlayerStats.NinPlayer.leaderstats.Ninjutsu.Value then
+                        PlayerStats.NinPlayer = v
+                    elseif not PlayerStats.NinPlayer then
+                        PlayerStats.NinPlayer = v
+                    end
+                    if PlayerStats.RepPlayer and v.leaderstats.Reputation.Value > PlayerStats.RepPlayer.leaderstats.Reputation.Value then
+                        PlayerStats.RepPlayer = v
+                    elseif not PlayerStats.RepPlayer then
+                        PlayerStats.RepPlayer = v
+                    end
+                end
+            end
+
+        end
+
+        local HomeTab = Tabs.Home
+
+        HomeTab:AddParagraph({
+            Title = "Welcome to Project Ninja Assassin, "..Players.LocalPlayer.Name.."!";
+        })
+
+        local tab2 = HomeTab:AddParagraph({
+            Title = "There are " ..#Players:GetPlayers().. "/" ..Players.MaxPlayers.. " players in the server";
+        })
+
+        local tab3 = HomeTab:AddParagraph({
+            Title = "There are " ..GetGoddedPlrs().. "/" ..#Players:GetPlayers().. " godded players";
+        })
+
+        local tab4 = HomeTab:AddParagraph({
+            Title = "Server Uptime: "..convertToHMS(time());
+        })
+
+        local tab5 = HomeTab:AddParagraph({
+            Title = "Highest ninjutsu player is: N/A"
+        })
+
+        local tab6 = HomeTab:AddParagraph({
+            Title = "Highest reputation player is: N/A"
+        })
+
+        HomeTab:AddParagraph({
+            Title = "Made by 5 big ass beautiful and sexy mother fuckers"
+        })
+
+        Functions.PlayerAdded.HomeTabInfo = function(player)
+            task.spawn(function()
+                if player:WaitForChild("leaderstats") then
+                    if player.leaderstats:WaitForChild("Ninjutsu").Value > PlayerStats.NinPlayer.leaderstats.Ninjutsu.Value or player.leaderstats:WaitForChild("Reputation").Value > PlayerStats.RepPlayer.leaderstats.Reputation.Value then
+                        GetHighestValues()
+                    end
+                end
+            end)
+        end
+
+        Functions.PlayerRemoved.HomeTabInfo = function(player)
+            task.spawn(function()
+                if PlayerStats.NinPlayer == player or PlayerStats.RepPlayer == player then
+                    GetHighestValues()
+                end
+            end)
+        end
+
+        GetHighestValues()
+
+        coroutine.resume(coroutine.create(function()
+            while task.wait(0.1) do
+                tab2:SetTitle("There are " ..#Players:GetPlayers().. "/" ..Players.MaxPlayers.. " players in the server")
+                tab3:SetTitle("There are " ..GetGoddedPlrs().. "/" ..#Players:GetPlayers().. " godded players")
+                tab4:SetTitle("Server Uptime: "..convertToHMS(time()))
+                if PlayerStats.NinPlayer then
+                    tab5:SetTitle("Highest nin player: " ..PlayerStats.NinPlayer.Name.. " with " ..comma_value(PlayerStats.NinPlayer.leaderstats.Ninjutsu.Value))
+                end
+                if PlayerStats.RepPlayer then
+                    tab6:SetTitle("Highest rep player: " ..PlayerStats.RepPlayer.Name.. " with " ..high_number_format(PlayerStats.RepPlayer.leaderstats.Reputation.Value))
+                end
+            end
+        end))
+
+    end
+
     local function TrainingTab()
 
         local TrainingToggles = Tabs.Training:AddSection("Toggles")
@@ -1891,18 +2262,19 @@ Functions.CreateMainTabs = function()
             Callback = function(state)
                 if state then
                     Variables.AutoTrain = true
-                    local Last = 0
-                    local Event = game:GetService("ReplicatedStorage").RemoteEvent.AddPowerEvent
-                    Functions.Heartbeat.AutoTrain = {Variables.TrainRate, tick() + Variables.TrainRate, function()
-                        if Last ~= Variables.TrainAmount then
-                            Last = Variables.TrainAmount
-                        else
-                            Last = Variables.TrainAmount - 0.001
+                    task.spawn(function()
+                        while Variables.AutoTrain do
+                            if not Variables.GainingNegativeNin then
+                                game:GetService("ReplicatedStorage").RemoteEvent.AddPowerEvent:FireServer("FromTraining",Variables.TrainAmount)
+                                task.wait(Variables.TrainRate)
+                                game:GetService("ReplicatedStorage").RemoteEvent.AddPowerEvent:FireServer("FromTraining",Variables.TrainAmount - 0.001)
+                                task.wait(Variables.TrainRate)
+                            else
+                                task.wait()
+                            end
                         end
-                        Event:FireServer("FromTraining",Last)
-                    end}
+                    end)
                 else
-                    Functions.Heartbeat.AutoTrain = nil
                     Variables.AutoTrain = false
                 end
             end
@@ -2107,7 +2479,7 @@ Functions.CreateMainTabs = function()
             Callback = function(state)
                 if state then
                     Variables.AntiAfk = true
-                    Players.LocalPlayer.Idled:Connect(function()
+                    antiafkconnect = Players.LocalPlayer.Idled:Connect(function()
                         if Variables.AntiAfk then
                             local VirtualUser = game:GetService("VirtualUser")
                             VirtualUser:CaptureController()
@@ -2116,6 +2488,9 @@ Functions.CreateMainTabs = function()
                     end)
                 else
                     Variables.AntiAfk = false
+                    pcall(function()
+                        antiafkconnect:Disconnect()
+                    end)
                 end
             end
         })
@@ -2156,19 +2531,19 @@ Functions.CreateMainTabs = function()
 
                     Functions.WorkspaceDescendantAdded.AntiBubble = function(child)
                         if child:IsA("ForceField") and Character and child.Parent == Character then
-                            if not Variables.CharRespawning then
-                                RemoveBubble()
-                            end
+                            if Variables.CharRespawning then repeat task.wait() until not Variables.CharRespawning end
+                            RemoveBubble()
                         end
                     end
 
                 else
+                    Functions.WorkspaceDescendantAdded.AntiBubble = nil
                     Variables.AntiBubble = false
                 end
             end
         })
 
-        AddVariables({["AutoPosition"] = false, ["Positioning"] = {['x'] = 0, ['y'] = 0, ['z'] = 0}})
+        AddVariables({["AutoPosition"] = false, ["Positioning"] = {['X'] = 0, ['Y'] = 0, ['Z'] = 0}})
         TrainingToggles:AddToggle("Auto Position",{
             Title = "Auto Position";
             Description = "Automatically teleports you to a position in the world. Uses the X, Y, and Z variables of auto positioning.";
@@ -2176,14 +2551,16 @@ Functions.CreateMainTabs = function()
             Callback = function(state)
                 if state then
                     Variables.AutoPosition = true
-                    Functions.Heartbeat.AutoPosition = {10, tick() + 10, function()
-                        local location = CFrame.new(Variables.Positioning.x, Variables.Positioning.y, Variables.Positioning.z)
-                        if Functions.GetRoot(Character) then
-                            Functions.GetRoot(Character).CFrame = location
+                    coroutine.resume(coroutine.create(function()
+                        while Variables.AutoPosition do
+                            local location = CFrame.new(Variables.Positioning.x, Variables.Positioning.y, Variables.Positioning.z)
+                            if Functions.GetRoot(Character) then
+                                Functions.GetRoot(Character).CFrame = location
+                            end
+                            task.wait(10)
                         end
-                    end}
+                    end))
                 else
-                    Functions.Heartbeat.AutoPosition = nil
                     Variables.AutoPosition = false
                 end
             end
@@ -2197,21 +2574,23 @@ Functions.CreateMainTabs = function()
             Callback = function(state)
                 if state then
                     Variables.AutoReconnect = true
-                    Functions.Heartbeat.AutoReconnect = {0.5, tick() + 0.5, function()
-                        if CoreGui.RobloxPromptGui.promptOverlay:FindFirstChild("ErrorPrompt") then
-                            if CoreGui.RobloxPromptGui.promptOverlay:FindFirstChild("ErrorPrompt").TitleFrame.ErrorTitle.Text == "Disconnected" then
-                                if #Players:GetPlayers() <= 1 then
-                                    Players.LocalPlayer:Kick("\nRejoining...")
-                                    task.wait()
-                                    TeleportService:Teleport(game.PlaceId, Players.LocalPlayer)
-                                else
-                                    TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, Players.LocalPlayer)
+                    coroutine.resume(coroutine.create(function()
+                        while Variables.AutoReconnect do
+                            if CoreGui.RobloxPromptGui.promptOverlay:FindFirstChild("ErrorPrompt") then
+                                if CoreGui.RobloxPromptGui.promptOverlay:FindFirstChild("ErrorPrompt").TitleFrame.ErrorTitle.Text == "Disconnected" then
+                                    if #Players:GetPlayers() <= 1 then
+                                        Players.LocalPlayer:Kick("\nRejoining...")
+                                        task.wait()
+                                        TeleportService:Teleport(game.PlaceId, Players.LocalPlayer)
+                                    else
+                                        TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, Players.LocalPlayer)
+                                    end
                                 end
                             end
+                            task.wait(0.5)
                         end
-                    end}
+                    end))
                 else
-                    Functions.Heartbeat.AutoReconnect = nil
                     Variables.AutoReconnect = false
                 end
             end
@@ -2232,11 +2611,11 @@ Functions.CreateMainTabs = function()
                             end
                         end
                     end
-                    Functions.Stepped.Noclip = {0,0,function()
-                        NoclipLoop()
-                    end}
+                    Noclipping = RunService.Stepped:Connect(NoclipLoop)
                 else
-                    Functions.Stepped.Noclip = nil
+                    pcall(function()
+                        Noclipping:Disconnect()
+                    end)
                 end
             end
         })
@@ -2316,12 +2695,14 @@ Functions.CreateMainTabs = function()
             Callback = function(state)
                 if state then
                     Variables.AntiFirstScreen = true
-                    Functions.Heartbeat.AntiFirstScreen = {0.1,tick() + 0.1,function()
-                        game:GetService("Lighting"):FindFirstChild("Blur").Enabled = false
-                        Player:WaitForChild("PlayerGui"):FindFirstChild("FirstScreenGui").Enabled = false
-                    end}
+                    coroutine.resume(coroutine.create(function()
+                        while Variables.AntiFirstScreen do
+                            game:GetService("Lighting"):FindFirstChild("Blur").Enabled = false
+                            Player:WaitForChild("PlayerGui"):FindFirstChild("FirstScreenGui").Enabled = false
+                            task.wait(0.1)
+                        end
+                    end))
                 else
-                    Functions.Heartbeat.AntiFirstScreen = nil
                     Variables.AntiFirstScreen = false
                 end
             end
@@ -2966,8 +3347,11 @@ Functions.CreateMainTabs = function()
         })
 
         AddVariables({["AddAllLists"] = {}})
-        for n,_ in pairs(Lists) do
+        for n,t in pairs(Lists) do
             Variables.AddAllLists[n] = {}
+            for w,_ in pairs(t) do
+                Variables.AddAllLists[n][w] = false
+            end
         end
 
         local function CreateDropdown(n)
@@ -3069,12 +3453,6 @@ Functions.CreateMainTabs = function()
                 end
             end
         })
-
-    end
-
-    local function PlayersTab()
-
-        AddVariables({["SelectedPlayers"] = {}})
 
     end
 
@@ -3207,7 +3585,7 @@ Functions.CreateMainTabs = function()
                                             end
                                         end
                                     end)
-                                    while child.Parent == workspace and Variables.SilentAim do
+                                    while (child.Parent == workspace or child.Parent == Workspace) and Variables.SilentAim do
                                         local Player = Functions.GetTargetPlayer()
                                         if Variables.AirStrikeMode and not Variables.ShotgunFire and count == 0 and Character and Functions.GetRoot(Character) then
                                             task.wait()
@@ -3397,10 +3775,12 @@ Functions.CreateMainTabs = function()
                                         end
                                         if Variables.AutoTarget and State and child:FindFirstChild("creator").Value ~= Players.LocalPlayer and not Functions.ListFind("Targetlist",child.creator.Value.Name,Mode) and not Functions.ListFind("Whitelist",child.creator.Value.Name) and (Variables.FireOnGodMode or not Functions.IsGodded(child.creator.Value)) then
                                             Functions.ListInsert("Targetlist", child.creator.Value.Name, Mode)
+                                            Functions.Chat("{System} Added "..child.creator.Value.Name.." to the "..Mode.." Targetlist")
                                         end
                                     elseif child.Parent.Name == "Sword" then
                                         if Variables.AutoTarget and State and child.Parent.Parent.Name ~= Players.LocalPlayer.Name and not Functions.ListFind("Targetlist",child.Parent.Parent.Name,Mode) and not Functions.ListFind("Whitelist",child.Parent.Parent.Name) and (Variables.FireOnGodMode or not Functions.IsGodded(Players:FindFirstChild(child.Parent.Parent.Name))) then
                                             Functions.ListInsert("Targetlist", child.Parent.Parent.Name, Mode)
+                                            Functions.Chat("{System} Added "..child.Parent.Parent.Name.." to the "..Mode.." Targetlist")
                                         end
                                     end
                                 end
@@ -3434,10 +3814,12 @@ Functions.CreateMainTabs = function()
                                         end
                                         if Variables.AutoWLTarget and State and child:FindFirstChild("creator").Value ~= Players.LocalPlayer and not Functions.ListFind("Targetlist",child.creator.Value.Name,Mode) and not Functions.ListFind("Whitelist",child.creator.Value.Name) and (Variables.FireOnGodMode or not Functions.IsGodded(child.creator.Value)) then
                                             Functions.ListInsert("Targetlist", child.creator.Value.Name, Mode)
+                                            Functions.Chat("{System} Added "..child.creator.Value.Name.." to the "..Mode.." Targetlist")
                                         end
                                     elseif child.Parent.Name == "Sword" then
                                         if Variables.AutoWLTarget and State and child.Parent.Parent.Name ~= Players.LocalPlayer.Name and not Functions.ListFind("Targetlist",child.Parent.Parent.Name,Mode) and not Functions.ListFind("Whitelist",child.Parent.Parent.Name) and (Variables.FireOnGodMode or not Functions.IsGodded(Players:FindFirstChild(child.Parent.Parent.Name))) then
                                             Functions.ListInsert("Targetlist", child.Parent.Parent.Name, Mode)
+                                            Functions.Chat("{System} Added "..child.Parent.Parent.Name.." to the "..Mode.." Targetlist")
                                         end
                                     end
                                 end
@@ -3488,7 +3870,7 @@ Functions.CreateMainTabs = function()
                                         if not Functions.ListFind("Whitelist",v.Name) and v.Character and not v.Character:FindFirstChild("ForceField") and v.Character:FindFirstChild("Humanoid") and v.Character:FindFirstChild("Humanoid").Health > 0 and v.Character:FindFirstChild("Humanoid"):GetState() ~= Enum.HumanoidStateType.Dead and v.Character:FindFirstChild(Variables.AimPart) and (Variables.FireOnGodMode or not Functions.IsGodded(v)) then
                                             local targetplr = v
                                             local code = Functions.BoolsToBinary({Variables.AirStrikeMode, Variables.PredictMode, Variables.ServerShurikens, Variables.ShotgunFire})
-                                            TableFuncs["AutoFire"][code](Step)
+                                            TableFuncs["AutoFire"][code](targetplr,Step)
                                         end
                                     end
                                 end
@@ -3598,7 +3980,7 @@ Functions.CreateMainTabs = function()
                     Variables.DisableShurs = true
                     task.spawn(function()
                         while Variables.DisableShurs do
-                            if Functions.ListPlayerInServer("DisableShurslist") then
+                            if Functions.IsListPlayerInServer("DisableShurslist") then
                                 for i,v in pairs(Players:GetPlayers()) do
                                     pcall(function()
                                         for i,v in pairs(v.Backpack:GetChildren()) do
@@ -3637,6 +4019,7 @@ Functions.CreateMainTabs = function()
                                 if v:FindFirstChild("leaderstats") and v.leaderstats:FindFirstChild("Ninjutsu") and not Functions.ListFind("Whitelist",v.Name) and not Functions.ListFind("BreakShurlist",v.Name,"Normal") then
                                     if v.leaderstats.Ninjutsu.Value < 0 then
                                         Functions.ListInsert("BreakShurlist",v.Name,"Normal")
+                                        Functions.Chat("{System} Added "..v.Name.." to the Normal BreakShurlist")
                                     end
                                 end
                             end
@@ -3654,10 +4037,12 @@ Functions.CreateMainTabs = function()
                                         end
                                         if Variables.AutoBreakShurs and State and child:FindFirstChild("creator").Value ~= Players.LocalPlayer and not Functions.ListFind("BreakShurlist",child.creator.Value.Name,Mode) and not Functions.ListFind("Whitelist",child.creator.Value.Name) then
                                             Functions.ListInsert("BreakShurlist", child.creator.Value.Name, Mode)
+                                            Functions.Chat("{System} Added "..child.creator.Value.Name.." to the "..Mode.." BreakShurlist")
                                         end
                                     elseif child.Parent.Name == "Sword" then
                                         if Variables.AutoBreakShurs and State and child.Parent.Parent.Name ~= Players.LocalPlayer.Name and not Functions.ListFind("BreakShurlist",child.Parent.Parent.Name,Mode) and not Functions.ListFind("Whitelist",child.Parent.Parent.Name) then
                                             Functions.ListInsert("BreakShurlist", child.Parent.Parent.Name, Mode)
+                                            Functions.Chat("{System} Added "..child.Parent.Parent.Name.." to the "..Mode.." BreakShurlist")
                                         end
                                     end
                                 end
@@ -3673,6 +4058,126 @@ Functions.CreateMainTabs = function()
             end;
         })
 
+        AddVariables({["AutoWLBreakShurs"] = false})
+        CombatToggles:AddToggle("AutoWhitelistBreakShurikens",{
+            Title = "Auto Whitelist Break Shurikens";
+            Description = "Automatically breaks the shurikens of players who hit whitelisted players.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.AutoWLBreakShurs = true
+                    Functions.WhitelistCharacterTouched.AutoWhitelistBreakShurikens = function(child,wlplr)
+                        if Variables.AutoWLBreakShurs and Functions.ListFind("Whitelist",wlplr.Name) then
+                            for Mode, State in pairs(Variables.AutoBreakShurikensMode) do
+                                if State then
+                                    if child.Name == "ThrownKunai" then
+                                        if not child:FindFirstChild("creator") then
+                                            repeat task.wait() until child:FindFirstChild("creator")
+                                        end
+                                        if Variables.AutoWLBreakShurs and State and child:FindFirstChild("creator").Value ~= Players.LocalPlayer and not Functions.ListFind("BreakShurlist",child.creator.Value.Name,Mode) and not Functions.ListFind("Whitelist",child.creator.Value.Name) then
+                                            Functions.ListInsert("BreakShurlist", child.creator.Value.Name, Mode)
+                                            Functions.Chat("{System} Added "..child.creator.Value.Name.." to the "..Mode.." BreakShurlist")
+                                        end
+                                    elseif child.Parent.Name == "Sword" then
+                                        if Variables.AutoWLBreakShurs and State and child.Parent.Parent.Name ~= Players.LocalPlayer.Name and not Functions.ListFind("BreakShurlist",child.Parent.Parent.Name,Mode) and not Functions.ListFind("Whitelist",child.Parent.Parent.Name) then
+                                            Functions.ListInsert("BreakShurlist", child.Parent.Parent.Name, Mode)
+                                            Functions.Chat("{System} Added "..child.Parent.Parent.Name.." to the "..Mode.." BreakShurlist")
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                else
+                    pcall(function()
+                        Variables.AutoWLBreakShurs = false
+                        Functions.CharacterTouched.AutoWhitelistBreakShurikens = nil
+                    end)
+                end
+            end
+        })
+
+        AddVariables({["ActivateHitEvent"] = false, ["HitEventWait"] = 0.02, ["HitEventFinishWait"] = 0.02, ["HitEventWeapons"] = {["Sword"] = false, ["Shuriken"] = false, ["Teleport"] = false}})
+        CombatToggles:AddToggle("ActivateHitEvent",{
+            Title = "Activate Hit Event";
+            Description = "Constantly fires selected weapon's hit events which makes the sword constantly fire.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.ActivateHitEvent = false
+                    task.wait()
+                    Variables.ActivateHitEvent = true
+                    task.spawn(function()
+                        local WaitTable = {game:GetService("RunService").Stepped, game:GetService("RunService").Heartbeat, game:GetService("RunService").RenderStepped}
+                        local WaitValue = 0
+                        while Variables.ActivateHitEvent do
+                            for i,v in pairs(Variables.HitEventWeapons) do
+                                if v then
+                                    if Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild(i) then
+                                        for _,v in pairs(Players.LocalPlayer.Character:GetChildren()) do
+                                            if v.Name == i and v:FindFirstChild("HitEvent") and Variables.ActivateHitEvent then
+                                                v.HitEvent:FireServer()
+                                                if Variables.HitEventWait >= 0 then
+                                                    task.wait(Variables.HitEventWait)
+                                                elseif Variables.HitEventWait == -1 then
+                                                    if WaitValue >= 3 then
+                                                        WaitValue = 0
+                                                    end
+                                                    WaitValue = WaitValue + 1
+                                                    WaitTable[WaitValue]:Wait()
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                            if Variables.HitEventFinishWait >= 0 then
+                                task.wait(Variables.HitEventFinishWait)
+                            elseif Variables.HitEventFinishWait < 0 then
+                                if WaitValue >= 3 then
+                                    WaitValue = 0
+                                end
+                                WaitValue = WaitValue + 1
+                                WaitTable[WaitValue]:Wait()
+                            end
+                        end
+                    end)
+                else
+                    Variables.ActivateHitEvent = false
+                end
+            end;
+        })
+
+        AddVariables({["WeaponAutoEquip"] = false, ["AutoEquipWeapons"] = {['Sword'] = false, ['Shuriken'] = false, ['Teleport'] = false}})
+        CombatToggles:AddToggle("WeaponAutoEquip",{
+            Title = "Weapon Auto Equip";
+            Description = "Automatically equips weapons from the weapon list.";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    Variables.WeaponAutoEquip = false;
+                    task.wait()
+                    Variables.WeaponAutoEquip = true;
+                    coroutine.resume(coroutine.create(function()
+                        while Variables.WeaponAutoEquip do
+                            for i,v in pairs(Variables.AutoEquipWeapons) do
+                                if v and Character and not Variables.CharRespawning then
+                                    if not Character:FindFirstChild(i) then
+                                        if Players.LocalPlayer.Backpack:FindFirstChild(i) then
+                                            Players.LocalPlayer.Backpack:FindFirstChild(i).Parent = Character
+                                        end
+                                    end
+                                end
+                            end
+                            task.wait()
+                        end
+                    end))
+                else
+                    Variables.WeaponAutoEquip = false
+                end
+            end;
+        })
+
         local CombatSettings = Tabs.Combat:AddSection("Settings")
 
         CombatSettings:AddDropdown("AutoTargetMode",{
@@ -3683,11 +4188,74 @@ Functions.CreateMainTabs = function()
             Default = "Soft";
         })
 
+        CombatSettings:AddDropdown("AutoBreakShurikensMode",{
+            Title = "Auto Break Shurikens Mode";
+            Description = "Mode that ABS uses.";
+            Values = Constants.Modes;
+            Multi = false;
+            Default = "Soft";
+        })
+
+        CombatSettings:AddDropdown("AimPart",{
+            Title = "Aim Part";
+            Description = "Configure the aim part.";
+            Values = Constants.BodyParts;
+            Multi = false;
+            Default = "Head";
+        })
+
+        CombatSettings:AddDropdown("HitEventWeapon",{
+            Title = "Hit Event Weapon";
+            Description = "Configure hit event weapon.";
+            Values = Constants.Weapons;
+            Multi = true;
+            Default = {};
+        })
+
+        CombatSettings:AddDropdown("AutoEquipWeapon",{
+            Title = "Auto Equip Weapon";
+            Description = "Auto equip a weapon.";
+            Values = Constants.Weapons;
+            Multi = true;
+            Default = {};
+        })
+
         Options.AutoTargetMode:OnChanged(function(Value)
             for i,_ in pairs(Variables.AutoTargetMode) do
                 Variables.AutoTargetMode[i] = false
             end
             Variables.AutoTargetMode[Value] = true
+        end)
+
+        Options.AutoBreakShurikensMode:OnChanged(function(Value)
+            for i,_ in pairs(Variables.AutoBreakShurikensMode) do
+                Variables.AutoBreakShurikensMode[i] = false
+            end
+            Variables.AutoBreakShurikensMode[Value] = true
+        end)
+
+        Options.AimPart:OnChanged(function(Value)
+            Variables.AimPart = Value
+        end)
+
+        Options.HitEventWeapon:OnChanged(function(Values)
+            for i,v in pairs(Variables.HitEventWeapons) do
+                if Values[i] then
+                    Variables.HitEventWeapons[i] = true
+                else
+                    Variables.HitEventWeapons[i] = false
+                end
+            end
+        end)
+
+        Options.AutoEquipWeapon:OnChanged(function(Values)
+            for i,v in pairs(Variables.AutoEquipWeapons) do
+                if Values[i] then
+                    Variables.AutoEquipWeapons[i] = true
+                else
+                    Variables.AutoEquipWeapons[i] = false
+                end
+            end
         end)
 
         CombatSettings:AddToggle("AirStrikeMode",{
@@ -3806,6 +4374,18 @@ Functions.CreateMainTabs = function()
             end;
         })
 
+        CombatSettings:AddInput("ShotgunFireSpread",{
+            Title = "Shotgun Fire Spread";
+            Description = "Configure shotgun fire spread.";
+            Default = Variables.ShotgunFireSpread;
+            Placeholder = "Enter a number..";
+            Numeric = true;
+            Finished = true;
+            Callback = function(Value)
+                Variables.ShotgunFireSpread = tonumber(Value)
+            end;
+        })
+
         CombatSettings:AddInput("LoopbringDistance",{
             Title = "Loop Bring Distance";
             Description = "Configure loop bring distance.";
@@ -3866,13 +4446,113 @@ Functions.CreateMainTabs = function()
             end;
         })
 
+        CombatSettings:AddInput("HitEventWait",{
+            Title = "Hit Event Wait";
+            Description = "Configure hit event wait";
+            Default = Variables.HitEventWait;
+            Placeholder = "Enter a number..";
+            Numeric = true;
+            Finished = true;
+            Callback = function(Value)
+                Variables.HitEventWait = tonumber(Value)
+            end;
+        })
+    
+        CombatSettings:AddInput("HitEventFinishWait",{
+            Title = "Hit Event Finish Wait";
+            Description = "Configure hit event finish wait";
+            Default = Variables.HitEventFinishWait;
+            Placeholder = "Enter a number..";
+            Numeric = true;
+            Finished = true;
+            Callback = function(Value)
+                Variables.HitEventFinishWait = tonumber(Value)
+            end;
+        })
+
+    end
+
+    local function PlayersTab()
+
+        -- // wip..
+
+        AddVariables({["SelectedPlayers"] = {}, ["ESP"] = false, ["Chams"] = false, ["WeaponESP"] = false, ["WeaponChams"] = false})
+
+        local PlayersDropdowns = Tabs.Players:AddSection("Dropdowns")
+
+        PlayersDropdowns:AddDropdown("PlayerList",{
+            Title = "Player List";
+            Values = Functions.PlayersToStrings(Players:GetPlayers());
+            Multi = true;
+            Default = Variables.SelectedPlayers;
+        })
+    
+        Options.PlayerList:OnChanged(function(Values)
+            for _,v in pairs(Players:GetPlayers()) do
+                if not Values[v.Name] and Variables.SelectedPlayers[v.Name] then
+                    Variables.SelectedPlayers[v.Name] = nil
+                end
+            end
+            for Value, State in pairs(Values) do
+                if not Variables.SelectedPlayers[Value] then
+                    Variables.SelectedPlayers[Value] = true
+                    if Players:FindFirstChild(Value) then
+                        Functions.AddPlayerVanities(Players:FindFirstChild(Value),true)
+                    end
+                end
+            end
+        end)
+    
+        PlayersDropdowns:AddToggle("AddAllPlayers",{
+            Title = "Add All Players";
+            Default = false;
+            Callback = function(state)
+                if state then
+                    for i,v in pairs(Players:GetPlayers()) do
+                        Variables.SelectedPlayers[v.Name] = true
+                        Functions.AddPlayerVanities(v)
+                    end
+                    Functions.PlayerAdded.AddAllPlayers = function(player)
+                        Variables.SelectedPlayers[player.Name] = true
+                    end
+                    Functions.PlayerRemoved.AddAllPlayers = function(player)
+                        Variables.SelectedPlayers[player.Name] = nil
+                    end
+                else
+                    pcall(function()
+                        Functions.PlayerAdded.AddAllPlayers = nil
+                        Functions.PlayerRemoved.AddAllPlayers = nil
+                    end)
+                end
+            end
+        })
+    
+        PlayersDropdowns:AddButton({
+            Title = "Remove All Players";
+            Callback = function()
+                for i,v in pairs(Players:GetPlayers()) do
+                    Variables.SelectedPlayers[v.Name] = nil
+                    Functions.RemovePlayerVanities(v)
+                end
+            end
+        })
+    
+        PlayersDropdowns:AddButton({
+            Title = "Refresh Player List";
+            Callback = function()
+                Options.PlayerList:SetValues(Functions.PlayersToStrings(Players:GetPlayers()))
+                Options.PlayerList:SetValue(Variables.SelectedPlayers)
+            end
+        })
+
     end
 
     TouchedFuncs()
+    HomeTab()
     TrainingTab()
     ListsTab()
-    PlayersTab()
     CombatTab()
+    PlayersTab()
 
 end
 
@@ -3952,36 +4632,6 @@ Functions.StartMainConnections = function()
 
 end
 
-Functions.StartMainLoops = function()
-    RunService.Heartbeat:Connect(function()
-        if not next(Functions.Heartbeat) then return end
-        for _,v in pairs(Functions.Heartbeat) do
-            if tick() >= v[2] then
-                v[2] = tick() + v[1]
-                v[3]()
-            end
-        end
-    end)
-    RunService.RenderStepped:Connect(function()
-        if not next(Functions.RenderStepped) then return end
-        for _,v in pairs(Functions.RenderStepped) do
-            if tick() >= v[2] then
-                v[2] = tick() + v[1]
-                v[3]()
-            end
-        end
-    end)
-    RunService.Stepped:Connect(function()
-        if not next(Functions.Stepped) then return end
-        for _,v in pairs(Functions.Stepped) do
-            if tick() >= v[2] then
-                v[2] = tick() + v[1]
-                v[3]()
-            end
-        end
-    end)
-end
-
 Functions.StartFluentSystems = function()
 
     SaveManager:SetLibrary(Fluent)
@@ -4014,7 +4664,6 @@ local success,err = pcall(function()
     Functions.LoadSettings()
     Functions.CreateMainTabs()
     Functions.StartMainConnections()
-    Functions.StartMainLoops()
     Functions.StartFluentSystems()
 end)
 
