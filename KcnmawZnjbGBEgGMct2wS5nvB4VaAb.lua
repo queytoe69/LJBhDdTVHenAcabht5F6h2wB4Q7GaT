@@ -2324,7 +2324,7 @@ Functions.CreateMainTabs = function()
             end;
         })
 
-        AddVariables({["SwordList"] = {}})
+        AddVariables({["SwordList"] = {}, ["DroppingSword"] = false})
         TrainingToggles:AddToggle("Drop Training Sword",{
             Title = "Drop Training Sword";
             Description = "Allows you to walk, jump, and attack while still being able to train. Reset after you turn it off.";
@@ -2333,6 +2333,7 @@ Functions.CreateMainTabs = function()
                 if state then
 
                     local function DropSword(char)
+                        Variables.DroppingSword = true
                         if #Variables.SwordList ~= 0 then
                             for i,v in pairs(Variables.SwordList) do
                                 v:Destroy()
@@ -2352,6 +2353,7 @@ Functions.CreateMainTabs = function()
                             tool.Handle.Transparency = 1
                             Variables.SwordList[#Variables.SwordList + 1] = tool
                         end
+                        Variables.DroppingSword = false
                     end
 
                     if Character then
@@ -2393,10 +2395,39 @@ Functions.CreateMainTabs = function()
                         end)
                     end
 
+                    Functions.WorkspaceDescendantRemoved.DropTrainingSword = function(child)
+                        if table.find(Variables.SwordList,child) and not Variables.DroppingSword then
+                            task.spawn(function()
+                                if Character:FindFirstChild("Humanoid") and Character.Humanoid.Health > 0 then
+                                    local tempval = false
+                                    if not Options["Auto Respawn"].Value then
+                                        Options["Auto Respawn"]:SetValue(true)
+                                        tempval = true
+                                    end
+                                    Character.Humanoid.Health = 0
+                                    Players.LocalPlayer.CharacterAdded:Wait()
+                                    task.wait()
+                                    if tempval then
+                                        Options["Auto Respawn"]:SetValue(false)
+                                    end
+                                elseif Character:FindFirstChild("Humanoid") and Character.Humanoid.Health <= 0 then
+                                    if Functions.GetRoot(Character) then
+                                        local oldpos = Functions.GetRoot(Character).CFrame
+                                        game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):WaitForChild("SpawnCharacterEvent"):FireServer("MainSpawn")
+                                        task.wait()
+                                        Functions.CheckAllParts(Character)
+                                        Functions.GetRoot(Character).CFrame = oldpos
+                                    end
+                                end
+                            end)
+                        end
+                    end
+
                 else
 
                     pcall(function()
                         Functions.CharacterAdded.DropTrainingSword = nil
+                        Functions.WorkspaceDescendantRemoved.DropTrainingSword = nil
                         BackpackChildAdded:Disconnect()
                     end)
 
