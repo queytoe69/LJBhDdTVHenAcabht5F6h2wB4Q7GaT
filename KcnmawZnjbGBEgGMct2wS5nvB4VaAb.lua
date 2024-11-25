@@ -4824,7 +4824,6 @@ Functions.CreateMainTabs = function()
     PlayersTab()
 
 end
--- yo momma gay
 
 Functions.InitiateCommands = function()
 
@@ -5399,6 +5398,7 @@ local success,err = pcall(function()
     Functions.AutoExecute()
     Functions.LoadSettings()
     Functions.CreateMainTabs()
+    Functions.InitiateCommands()
     Functions.StartMainConnections()
     Functions.StartFluentSystems()
 end)
