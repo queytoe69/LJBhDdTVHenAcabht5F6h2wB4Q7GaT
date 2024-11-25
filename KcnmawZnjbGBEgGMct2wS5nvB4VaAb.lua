@@ -2050,8 +2050,10 @@ end
 Functions.GetTargetPlayer = function()
     local Player = nil
     local listNames = (Players.LocalPlayer.leaderstats.Ninjutsu.Value > 0 and {"Targetlist","Blacklist"}) or {"Whitelist"}
+    local plrInServer = false
     for _,list in pairs(listNames) do
         if not Functions.ListEmpty(list) and Functions.IsListPlayerInServer(list) then
+            plrInServer = true
             for n,t in pairs(Lists[list]) do
                 for w,p in pairs(t) do
                     local v = Players:FindFirstChild(p)
@@ -2062,7 +2064,7 @@ Functions.GetTargetPlayer = function()
             end
         end
     end
-    if not table.find(listNames,"Whitelist") and not Player then
+    if not table.find(listNames,"Whitelist") and not Player and not plrInServer then
         Player = Functions.ClosestPlayer()
     end
     return Player
@@ -4953,7 +4955,7 @@ Functions.InitiateCommands = function()
 
     function GetModeFromText(Text)
         for _,v in pairs(Constants.Modes) do
-            if string.sub(string.lower(v),1,string.len(Text)) == string.lower(Text) then
+            if Text and string.sub(string.lower(v),1,string.len(Text)) == string.lower(Text) then
                 return v
             end
         end
