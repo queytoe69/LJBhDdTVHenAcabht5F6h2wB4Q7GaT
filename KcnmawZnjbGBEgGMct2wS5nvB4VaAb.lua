@@ -4,6 +4,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local VERSION = "1.0.0"
 local MAINFILE = "Project Ninja Assassin v" .. VERSION .. " Settings.txt"
+local CMDBAR_KEYBIND = Enum.KeyCode.LeftBracket
 
 local cloneref = cloneref or function(o) return o end
 local Players = cloneref(game:GetService("Players"))
@@ -1268,7 +1269,7 @@ local TableFuncs = {
                 end
             end
         end;
-        ["0100"] = function(targetplr)
+        ["0100"] = function(targetplr,pshurthrown,AllThrowAnimations)
             if workspace:FindFirstChild("SPEEDPART") then
                 if Character and Character:FindFirstChild("Shuriken") then
                     for i,v in pairs(Character:GetChildren()) do
@@ -1485,7 +1486,7 @@ local function AddVariables(Tab)
 end
 
 Functions.Chat = function(message)
-    game.StarterGui:SetCore("ChatMakeSystemMessage", {Text = message, Color = Color3.fromRGB(0,255,40), Font = Enum.Font.Fantasy})
+    game.StarterGui:SetCore("ChatMakeSystemMessage", {Text = "{System} "..message, Color = Color3.fromRGB(0,255,40), Font = Enum.Font.Fantasy})
 end
 
 Functions.GetRoot = function(char)
@@ -1558,7 +1559,7 @@ Functions.GetBubble = function()
             if Character.Humanoid.Health == Character.Humanoid.MaxHealth then
                 repeat
                     root.CFrame = CFrame.new(70,98,-335)
-                    tas.wait(0.03)
+                    task.wait(0.03)
                 until Character:FindFirstChild("ForceField")
                 root.CFrame = beforepos
             end
@@ -1996,62 +1997,52 @@ Functions.RemovePlayerVanities = function(plr)
 end
 
 Functions.IsGodded = function(player)
-    if not player:IsA("Model") and player.Character and player.Character:FindFirstChild("Humanoid") then
-        if player.Character:FindFirstChild("Humanoid").Health >= 100000000000 then
-            return true
-        end
-    elseif player:IsA("Model") and player:FindFirstChild("Humanoid") then
-        if player:FindFirstChild("Humanoid").Health >= 100000000000 then
-            return true
-        end
-    end
-    return false
+    return ((not player:IsA("Model") and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health >= 100000000000) or (player:IsA("Model") and player:FindFirstChild("Humanoid") and player.Humanoid.Health >= 100000000000))
+end
+
+Functions.IsAlive = function(char)
+    return (char:FindFirstChild("Humanoid") and char.Humanoid:GetState() ~= Enum.HumanoidStateType.Dead and char.Humanoid.Health > 0)
+end
+
+Functions.CanBeHit = function(char)
+    return ((Variables.FireOnGodMode or not Functions.IsGodded(char)) and Functions.IsAlive(char) and not char:FindFirstChild("ForceField"))
+end
+
+Functions.GetAimPart = function(char)
+    return char:FindFirstChild(Variables.AimPart)
 end
 
 Functions.ClosestPlayer = function()
     local dist = math.huge
 	local target = nil
-	for i,v in pairs(game:GetService("Workspace"):GetChildren()) do
-		if Character and v ~= Character then
-			if v:FindFirstChild("Humanoid") and v:FindFirstChild(Variables.AimPart) then
-                if v.Humanoid:GetState() ~= Enum.HumanoidStateType.Dead and not v:FindFirstChild("ForceField") and v.Humanoid.Health >= 1 and (Variables.FireOnGodMode or not Functions.IsGodded(v)) then
-                    if not Functions.ListFind("Whitelist",v.Name) and Character:FindFirstChild(Variables.AimPart) then
-                        local Magnitude = (v:FindFirstChild(Variables.AimPart).Position - Character:FindFirstChild(Variables.AimPart).Position).Magnitude
-                        if Magnitude < dist then
-                            dist = Magnitude
-                            target = v
-                        end
-                    end
-                end
-			end
-		end
+	for i,v in pairs(Workspace:GetChildren()) do
+        if Character and v ~= Character and Functions.GetAimPart(v) and Functions.GetAimPart(Character) and Functions.CanBeHit(v) and not Functions.ListFind("Whitelist",v.Name) then
+            local Magnitude = (v:FindFirstChild(Variables.AimPart).Position - Character:FindFirstChild(Variables.AimPart).Position).Magnitude
+            if Magnitude < dist then
+                dist = Magnitude
+                target = v
+            end
+        end
 	end
 	return target
 end
 
 Functions.GetTargetPlayer = function()
     local Player = nil
-    if not Functions.ListEmpty("Targetlist") and Functions.IsListPlayerInServer("Targetlist") then
-        for n,t in pairs(Lists.Targetlist) do
-            for w,p in pairs(t) do
-                if Players:FindFirstChild(p) then
+    local listNames = (Players.LocalPlayer.leaderstats.Ninjutsu.Value > 0 and {"Targetlist","Blacklist"}) or {"Whitelist"}
+    for _,list in pairs(listNames) do
+        if not Functions.ListEmpty(list) and Functions.IsListPlayerInServer(list) then
+            for n,t in pairs(Lists[list]) do
+                for w,p in pairs(t) do
                     local v = Players:FindFirstChild(p)
-                    if v and v.Character and v.Character ~= Character and not Functions.ListFind("Whitelist",v.Name) and (Variables.FireOnGodMode or not Functions.IsGodded(v)) and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid:GetState() ~= Enum.HumanoidStateType.Dead and not v.Character:FindFirstChild("ForceField") and v.Character.Humanoid.Health > 0 then
+                    if v and v.Character and v.Character ~= Character and (list ~= "Whitelist" and not Functions.ListFind("Whitelist",v.Name)) and Functions.CanBeHit(v.Character) then
                         Player = v.Character
                     end
                 end
             end
         end
-    elseif not Functions.ListEmpty("Blacklist") and Functions.IsListPlayerInServer("Blacklist") then
-        for i,name in pairs(Lists.Blacklist) do
-            if Players:FindFirstChild(name) then
-                local v = Players:FindFirstChild(name)
-                if v and v.Character and v.Character ~= Character and not Functions.ListFind("Whitelist",v.Name) and (Variables.FireOnGodMode or not Functions.IsGodded(v)) and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid:GetState() ~= Enum.HumanoidStateType.Dead and not v.Character:FindFirstChild("ForceField") and v.Character.Humanoid.Health > 0 then
-                    Player = v.Character
-                end
-            end
-        end
-    elseif Functions.ClosestPlayer() then
+    end
+    if not table.find(listNames,"Whitelist") and not Player then
         Player = Functions.ClosestPlayer()
     end
     return Player
@@ -3245,26 +3236,11 @@ Functions.CreateMainTabs = function()
         local currentMode = "Soft"
         local includeWhitelist = false
         local previousValues = {}
-        local playersLeft = {}
 
         for n,t in pairs(Lists) do
             previousValues[n] = {}
-            playersLeft[n] = {}
             for w,_ in pairs(t) do
-                previousValues[n][w] = {}
-                if w == "Normal" or w == "Permanent" then
-                    playersLeft[n][w] = {}
-                end
-            end
-        end
-
-        Functions.PlayerRemoved.MultiListUpdate = function(player)
-            for n,t in pairs(Lists) do
-                if t['Normal'][player.Name] then
-                    playersLeft[n]['Normal'][player.Name] = true
-                elseif t['Permanent'][player.Name] then
-                    playersLeft[n]['Permanent'][player.Name] = true
-                end
+                previousValues[n][w] = Functions.GetListPlayersInServer(n,w)
             end
         end
 
@@ -3343,16 +3319,16 @@ Functions.CreateMainTabs = function()
 
         Options.ModeSelector:OnChanged(function(Value)
             currentMode = Value
-            local listplayers = Functions.GetListPlayersInServer(currentList,Value)
-            Options.Multilist:SetTitle(Value.." "..currentList)
+            local listplayers = Functions.GetListPlayersInServer(currentList,currentMode)
+            Options.Multilist:SetTitle(currentMode.." "..currentList)
             Options.Multilist:SetValue(listplayers)
             previousValues[currentList][currentMode] = listplayers
         end)
 
         Options.DropDownSelector:OnChanged(function(Value)
             currentList = Value
-            local listplayers = Functions.GetListPlayersInServer(currentList,Value)
-            Options.Multilist:SetTitle(currentMode.." "..Value)
+            local listplayers = Functions.GetListPlayersInServer(currentList,currentMode)
+            Options.Multilist:SetTitle(currentMode.." "..currentList)
             Options.Multilist:SetValue(listplayers)
             previousValues[currentList][currentMode] = listplayers
         end)
@@ -3360,17 +3336,16 @@ Functions.CreateMainTabs = function()
         Options.Multilist:OnChanged(function(Values)
             local tab = {}
             for Value, State in pairs(previousValues[currentList][currentMode]) do
-                if not Values[Value] and Functions.ListFind(currentList,Value,currentMode) and ((not playersLeft[currentList][currentMode]) or (playersLeft[currentList][currentMode] and not playersLeft[currentList][currentMode][Value])) then
+                if Players:FindFirstChild(Value) and not Values[Value] and Functions.ListFind(currentList,Value,currentMode) then
                     Functions.ListRemove(currentList,Value,currentMode)
-                elseif (playersLeft[currentList][currentMode] and playersLeft[currentList][currentMode][Value]) then
-                    tab[Value] = State
-                    playersLeft[currentList][currentMode][Value] = nil
                 end
             end
             for Value, State in pairs(Values) do
-                tab[Value] = State
-                if not previousValues[currentList][currentMode][Value] and not Functions.ListFind(currentList,Value,currentMode) then
-                    Functions.ListInsert(currentList,Value,currentMode)
+                if Players:FindFirstChild(Value) then
+                    tab[Value] = State
+                    if not Functions.ListFind(currentList,Value,currentMode)then
+                        Functions.ListInsert(currentList,Value,currentMode)
+                    end
                 end
             end
             previousValues[currentList][currentMode] = tab
@@ -3525,6 +3500,23 @@ Functions.CreateMainTabs = function()
                 if Character and Character:FindFirstChild("Humanoid") and not Character:FindFirstChild("ForceField") and Character.Humanoid.Health == Character.Humanoid.MaxHealth then
                     Character.Humanoid:UnequipTools()
                     Functions.GetBubble()
+                end
+            end
+        })
+
+        CombatButtons:AddButton({
+            Title = "Negative Ninjutsu";
+            Description = "Gives you negative ninjutsu for godding others. You can use it while auto train is on as well.";
+            Callback = function()
+                local tempdisable = Options.AutoTrain.Value
+                if tempdisable then
+                    Options.AutoTrain:SetValue(false)
+                end
+                task.wait(0.72)
+                ReplicatedStorage.RemoteEvent.AddPowerEvent:FireServer("FromTraining", -99900000000000000000000000000099999.99)
+                task.wait(0.72)
+                if tempdisable then
+                    Options.AutoTrain:SetValue(true)
                 end
             end
         })
@@ -3812,14 +3804,16 @@ Functions.CreateMainTabs = function()
                                         end
                                         if Variables.AutoTarget and State and child:FindFirstChild("creator").Value ~= Players.LocalPlayer and not Functions.ListFind("Targetlist",child.creator.Value.Name,Mode) and not Functions.ListFind("Whitelist",child.creator.Value.Name) and (Variables.FireOnGodMode or not Functions.IsGodded(child.creator.Value)) then
                                             Functions.ListInsert("Targetlist", child.creator.Value.Name, Mode)
-                                            Functions.Chat("{System} Added "..child.creator.Value.Name.." to the "..Mode.." Targetlist")
+                                            Functions.Chat("Added "..child.creator.Value.Name.." to the "..Mode.." Targetlist")
                                         end
                                     elseif child.Parent.Name == "Sword" then
                                         if Variables.AutoTarget and State and child.Parent.Parent.Name ~= Players.LocalPlayer.Name and not Functions.ListFind("Targetlist",child.Parent.Parent.Name,Mode) and not Functions.ListFind("Whitelist",child.Parent.Parent.Name) and (Variables.FireOnGodMode or not Functions.IsGodded(Players:FindFirstChild(child.Parent.Parent.Name))) then
                                             Functions.ListInsert("Targetlist", child.Parent.Parent.Name, Mode)
-                                            Functions.Chat("{System} Added "..child.Parent.Parent.Name.." to the "..Mode.." Targetlist")
+                                            Functions.Chat("Added "..child.Parent.Parent.Name.." to the "..Mode.." Targetlist")
                                         end
                                     end
+
+
                                 end
                             end
                         end
@@ -3832,6 +3826,17 @@ Functions.CreateMainTabs = function()
                 end
             end;
         })
+
+        --[[AddVariables({["TargetSum"] = false})
+            CombatToggles:AddToggle("TargetSum", {
+            Title = "Target Sum";
+            Description = "Tracks hits from attackers and adds them to the target list after 7 hits";
+            Default = false;
+            Callback = function(state)
+                Variables.TargetSum = state
+                if not state then Variables.AttackerHitCounts = {} end
+            end
+        })  ]]
 
         AddVariables({["AutoWLTarget"] = false})
         CombatToggles:AddToggle("AutoWhitelistTarget",{
@@ -3851,12 +3856,12 @@ Functions.CreateMainTabs = function()
                                         end
                                         if Variables.AutoWLTarget and State and child:FindFirstChild("creator").Value ~= Players.LocalPlayer and not Functions.ListFind("Targetlist",child.creator.Value.Name,Mode) and not Functions.ListFind("Whitelist",child.creator.Value.Name) and (Variables.FireOnGodMode or not Functions.IsGodded(child.creator.Value)) then
                                             Functions.ListInsert("Targetlist", child.creator.Value.Name, Mode)
-                                            Functions.Chat("{System} Added "..child.creator.Value.Name.." to the "..Mode.." Targetlist")
+                                            Functions.Chat("Added "..child.creator.Value.Name.." to the "..Mode.." Targetlist")
                                         end
                                     elseif child.Parent.Name == "Sword" then
                                         if Variables.AutoWLTarget and State and child.Parent.Parent.Name ~= Players.LocalPlayer.Name and not Functions.ListFind("Targetlist",child.Parent.Parent.Name,Mode) and not Functions.ListFind("Whitelist",child.Parent.Parent.Name) and (Variables.FireOnGodMode or not Functions.IsGodded(Players:FindFirstChild(child.Parent.Parent.Name))) then
                                             Functions.ListInsert("Targetlist", child.Parent.Parent.Name, Mode)
-                                            Functions.Chat("{System} Added "..child.Parent.Parent.Name.." to the "..Mode.." Targetlist")
+                                            Functions.Chat("Added "..child.Parent.Parent.Name.." to the "..Mode.." Targetlist")
                                         end
                                     end
                                 end
@@ -3900,14 +3905,19 @@ Functions.CreateMainTabs = function()
 
                     coroutine.resume(coroutine.create(function()
                         while Variables.AutoFire do
-                            for n,t in pairs(Lists.Targetlist) do
+                            local listName = "Targetlist"
+                            if Players.LocalPlayer.leaderstats.Ninjutsu.Value < 0 then listName = "Whitelist" end
+                            for n,t in pairs(Lists[listName]) do
                                 for w,p in pairs(t) do
                                     if Players:FindFirstChild(p) then
                                         local v = Players:FindFirstChild(p)
-                                        if not Functions.ListFind("Whitelist",v.Name) and v.Character and not v.Character:FindFirstChild("ForceField") and v.Character:FindFirstChild("Humanoid") and v.Character:FindFirstChild("Humanoid").Health > 0 and v.Character:FindFirstChild("Humanoid"):GetState() ~= Enum.HumanoidStateType.Dead and v.Character:FindFirstChild(Variables.AimPart) and (Variables.FireOnGodMode or not Functions.IsGodded(v)) then
-                                            local targetplr = v
+                                        if not Functions.ListFind("Whitelist",v.Name) and v.Character and Functions.CanBeHit(v.Character) and Functions.GetAimPart(v.Character) then
                                             local code = Functions.BoolsToBinary({Variables.AirStrikeMode, Variables.PredictMode, Variables.ServerShurikens, Variables.ShotgunFire})
-                                            TableFuncs["AutoFire"][code](targetplr,Step)
+                                            if string.sub(code,2,2) ~= "1" then
+                                                TableFuncs["AutoFire"][code](v,Step)
+                                            else
+                                                TableFuncs["AutoFire"]["0100"](v,pshurthrown,AllThrowAnimations)
+                                            end
                                         end
                                     end
                                 end
@@ -4056,7 +4066,7 @@ Functions.CreateMainTabs = function()
                                 if v:FindFirstChild("leaderstats") and v.leaderstats:FindFirstChild("Ninjutsu") and not Functions.ListFind("Whitelist",v.Name) and not Functions.ListFind("BreakShurlist",v.Name,"Normal") then
                                     if v.leaderstats.Ninjutsu.Value < 0 then
                                         Functions.ListInsert("BreakShurlist",v.Name,"Normal")
-                                        Functions.Chat("{System} Added "..v.Name.." to the Normal BreakShurlist")
+                                        Functions.Chat("Added "..v.Name.." to the Normal BreakShurlist")
                                     end
                                 end
                             end
@@ -4074,12 +4084,12 @@ Functions.CreateMainTabs = function()
                                         end
                                         if Variables.AutoBreakShurs and State and child:FindFirstChild("creator").Value ~= Players.LocalPlayer and not Functions.ListFind("BreakShurlist",child.creator.Value.Name,Mode) and not Functions.ListFind("Whitelist",child.creator.Value.Name) then
                                             Functions.ListInsert("BreakShurlist", child.creator.Value.Name, Mode)
-                                            Functions.Chat("{System} Added "..child.creator.Value.Name.." to the "..Mode.." BreakShurlist")
+                                            Functions.Chat("Added "..child.creator.Value.Name.." to the "..Mode.." BreakShurlist")
                                         end
                                     elseif child.Parent.Name == "Sword" then
                                         if Variables.AutoBreakShurs and State and child.Parent.Parent.Name ~= Players.LocalPlayer.Name and not Functions.ListFind("BreakShurlist",child.Parent.Parent.Name,Mode) and not Functions.ListFind("Whitelist",child.Parent.Parent.Name) then
                                             Functions.ListInsert("BreakShurlist", child.Parent.Parent.Name, Mode)
-                                            Functions.Chat("{System} Added "..child.Parent.Parent.Name.." to the "..Mode.." BreakShurlist")
+                                            Functions.Chat("Added "..child.Parent.Parent.Name.." to the "..Mode.." BreakShurlist")
                                         end
                                     end
                                 end
@@ -4113,12 +4123,12 @@ Functions.CreateMainTabs = function()
                                         end
                                         if Variables.AutoWLBreakShurs and State and child:FindFirstChild("creator").Value ~= Players.LocalPlayer and not Functions.ListFind("BreakShurlist",child.creator.Value.Name,Mode) and not Functions.ListFind("Whitelist",child.creator.Value.Name) then
                                             Functions.ListInsert("BreakShurlist", child.creator.Value.Name, Mode)
-                                            Functions.Chat("{System} Added "..child.creator.Value.Name.." to the "..Mode.." BreakShurlist")
+                                            Functions.Chat("Added "..child.creator.Value.Name.." to the "..Mode.." BreakShurlist")
                                         end
                                     elseif child.Parent.Name == "Sword" then
                                         if Variables.AutoWLBreakShurs and State and child.Parent.Parent.Name ~= Players.LocalPlayer.Name and not Functions.ListFind("BreakShurlist",child.Parent.Parent.Name,Mode) and not Functions.ListFind("Whitelist",child.Parent.Parent.Name) then
                                             Functions.ListInsert("BreakShurlist", child.Parent.Parent.Name, Mode)
-                                            Functions.Chat("{System} Added "..child.Parent.Parent.Name.." to the "..Mode.." BreakShurlist")
+                                            Functions.Chat("Added "..child.Parent.Parent.Name.." to the "..Mode.." BreakShurlist")
                                         end
                                     end
                                 end
@@ -4812,6 +4822,473 @@ Functions.CreateMainTabs = function()
     ListsTab()
     CombatTab()
     PlayersTab()
+
+end
+-- yo momma gay
+
+Functions.InitiateCommands = function()
+
+    local Prefixes = {
+        ['jarvis'] = true;
+        ['alexa'] = true;
+        ['siri'] = true;
+        ['breezy'] = true;
+        ['.'] = true;
+        ['!'] = true;
+        [';'] = true;
+        ['?'] = true;
+        ['>'] = true;
+    }
+    
+    local SpecialCharacters = {
+        ['me'] = function(speaker) return {speaker} end;
+        ['all'] = function(speaker) return Players:GetPlayers() end;
+        ['others'] = function(speaker) local plrs = Players:GetPlayers() table.remove(plrs,speaker) return plrs end;
+    }
+
+    local Commands = {}
+
+    function FindInTable(tbl,val)
+        if tbl == nil then return false end
+        for _,v in pairs(tbl) do
+            if v == val then return true end
+        end 
+        return false
+    end
+
+    function AddCommand(name,alias,func)
+        Commands[#Commands+1] = {
+            NAME = name;
+            ALIAS = alias or {};
+            FUNC = func;
+        }
+    end
+
+    function RemoveCommand(cmd)
+        if cmd ~= " " then
+            for i = #Commands,1,-1 do
+                if Commands[i].NAME == cmd or FindInTable(Commands[i].ALIAS,cmd) then
+                    table.remove(Commands,i)
+                end
+            end
+        end
+    end
+    
+    function FindCommand(name)
+        for i,v in pairs(Commands) do
+            if v.NAME:lower() == name:lower() or FindInTable(v.ALIAS,name:lower()) then
+                return v
+            end
+        end
+        return false
+    end
+    
+    function ExecuteCommand(cmdStr,speaker,store)
+        local cmd = FindCommand(cmdStr)
+        if cmd then
+            local success,err = pcall(function()
+                cmd.FUNC(speaker,store)
+            end)
+        end
+    end
+
+    function GetPlayer(list,speaker)
+        if list == nil then return {speaker} end
+        local nameList = string.split(list,",")
+        local plrList = {}
+        for _,v in pairs(nameList) do
+            if SpecialCharacters[v] then
+                for _,g in pairs(SpecialCharacters[v](speaker)) do
+                    table.insert(plrList,g)
+                end
+            else
+                for _,Player in pairs(Players:GetPlayers()) do
+                    if (string.sub(string.lower(Player.Name),1,string.len(v)) == string.lower(v)) or (string.sub(string.lower(Player.DisplayName),1,string.len(v)) == string.lower(v)) then
+                        table.insert(plrList,Player)
+                    elseif tonumber(v) then
+                        table.insert(plrList,Players:GetNameFromUserIdAsync(tonumber(v)))
+                    end
+                end
+            end
+        end
+        return plrList
+    end
+
+    function PrefixCheck(message)
+        if Prefixes[message[1]] then
+            return message[2]
+        elseif Prefixes[string.sub(message[1],1,1)] then
+            local tempstring = message[1]:split(string.sub(message[1],1,1))
+            return tempstring[2]
+        end
+        return nil
+    end
+
+    function TeleportPlayer(plr1,plr2)
+        if plr1 and plr2 then
+            if plr1.Character and Functions.GetRoot(plr1.Character) and plr2.Character and Functions.GetRoot(plr2.Character) then
+                Functions.GetRoot(plr1.Character).CFrame = Functions.GetRoot(plr2.Character).CFrame
+            end
+        end
+    end
+
+    function GetModeFromText(Text)
+        for _,v in pairs(Constants.Modes) do
+            if string.sub(string.lower(v),1,string.len(Text)) == string.lower(Text) then
+                return v
+            end
+        end
+        return nil
+    end
+
+    function ListFilter(lists,value,mode)
+        local mode = mode or nil
+        for _,list in pairs(lists) do
+            if Functions.ListFind(list,value,mode) then
+                Functions.ListRemove(list,value,mode)
+                Functions.Chat("Removed "..value.." from the "..mode..list)
+            end
+        end
+    end
+
+    function GetBool(text)
+        local trues = {'on', 'true', 'yes'}
+        local falses = {'off', 'false', 'no'}
+        if table.find(trues,text) then
+            return true
+        elseif table.find(falses,text) then
+            return false
+        end
+        return nil
+    end
+
+    AddCommand('goto', {'to', 'tpto'}, function(speaker,store)
+        local players = GetPlayer(store.args[1],speaker)
+	    if players then
+            for _,v in pairs(players) do
+                TeleportPlayer(speaker,v)
+            end
+        end
+    end)
+
+    AddCommand('cbring', {'cb', 'bring'}, function(speaker,store)
+        local players = GetPlayer(store.args[1],speaker)
+	    if players then
+            for _,v in pairs(players) do
+                TeleportPlayer(v,speaker)
+            end
+        end
+    end)
+
+    AddCommand('getlist', {'gl', 'printlist', 'showlist'}, function(speaker,store)
+        local list = store.args[1]
+        local listNamesTable = {}
+        for n,t in pairs(Lists) do
+            listNamesTable[string.lower(n)] = n
+        end
+        local count = 0
+        local listName = listNamesTable[list]
+        print("List name: "..listName)
+        print("----------- // "..string.upper(listName).."ED PLAYERS // -----------")
+        for n,t in pairs(Lists[listName]) do
+            print("--- MODE START: "..string.upper(n).." ---")
+            for w,p in pairs(t) do
+                count += 1
+                print(count, p)
+            end
+        end
+        Functions.Chat("The list given has been printed to the console (press F9 or execute 'game.StarterGui:SetCore(\"DevConsoleVisible\", true)' to open it)")
+    end)
+
+    AddCommand('whitelist', {'wl', 'wlist', 'protect'}, function(speaker,store)
+        local players = GetPlayer(store.args[1],speaker)
+	    if players then
+            for _,v in pairs(players) do
+                local mode = GetModeFromText(store.args[2]) or "Permanent"
+                if not Functions.ListFind("Whitelist",v.Name,mode) then
+                    ListFilter({"Targetlist","Blacklist"},v.Name)
+                    Functions.ListInsert("Whitelist",v.Name,mode)
+                    Functions.Chat("Added "..v.Name.." to the "..mode.." Whitelist")
+                end
+            end
+        end
+    end)
+
+    AddCommand('unwhitelist', {'unwl', 'unwlist', 'unprotect'}, function(speaker,store)
+        local players = GetPlayer(store.args[1],speaker)
+	    if players then
+            for _,v in pairs(players) do
+                local mode = GetModeFromText(store.args[2]) or "Permanent"
+                if Functions.ListFind("Whitelist",v.Name,mode) then
+                    Functions.ListRemove("Whitelist",v.Name,mode)
+                    Functions.Chat("Removed "..v.Name.." from the "..mode.." Whitelist")
+                end
+            end
+        end
+    end)
+
+    AddCommand('blacklist', {'bl', 'blist'}, function(speaker,store)
+        local players = GetPlayer(store.args[1],speaker)
+        local bool = store.args[3] or store.args[2]
+	    if players then
+            for _,v in pairs(players) do
+                local mode = GetModeFromText(store.args[2]) or "Normal"
+                if not Functions.ListFind("Blacklist",v.Name,mode) then
+                    if GetBool(bool) == true then
+                        ListFilter({"Whitelist"},v.Name)
+                    end
+                    if not Functions.ListFind("Whitelist",v.Name) then
+                        Functions.ListInsert("Blacklist",v.Name,mode)
+                        Functions.Chat("Added "..v.Name.." to the "..mode.." Blacklist")
+                    end
+                end
+            end
+        end
+    end)
+
+    AddCommand('unblacklist', {'unbl', 'unblist'}, function(speaker,store)
+        local players = GetPlayer(store.args[1],speaker)
+	    if players then
+            for _,v in pairs(players) do
+                local mode = GetModeFromText(store.args[2]) or "Normal"
+                if Functions.ListFind("Blacklist",v.Name,mode) then
+                    Functions.ListRemove("Blacklist",v.Name,mode)
+                    Functions.Chat("Removed "..v.Name.." from the "..mode.." Blacklist")
+                end
+            end
+        end
+    end)
+
+    AddCommand('target', {'t', 'tg', 'destroy', 'end', 'obliterate', 'eliminate'}, function(speaker,store)
+        local players = GetPlayer(store.args[1],speaker)
+        local bool = store.args[3] or store.args[2]
+	    if players then
+            for _,v in pairs(players) do
+                local mode = GetModeFromText(store.args[2]) or "Normal"
+                if not Functions.ListFind("Targetlist",v.Name,mode) then
+                    if GetBool(bool) == true then
+                        ListFilter({"Whitelist"},v.Name)
+                    end
+                    if not Functions.ListFind("Whitelist",v.Name) then
+                        Functions.ListInsert("Targetlist",v.Name,mode)
+                        Functions.Chat("Added "..v.Name.." to the "..mode.." Targetlist")
+                    end
+                end
+            end
+        end
+    end)
+
+    AddCommand('untarget', {'unt', 'untg'}, function(speaker,store)
+        local players = GetPlayer(store.args[1],speaker)
+	    if players then
+            for _,v in pairs(players) do
+                local mode = GetModeFromText(store.args[2]) or "Normal"
+                if Functions.ListFind("Targetlist",v.Name,mode) then
+                    Functions.ListRemove("Targetlist",v.Name,mode)
+                    Functions.Chat("Removed "..v.Name.." from the "..mode.." Targetlist")
+                end
+            end
+        end
+    end)
+
+    AddCommand('kill', {'k', 'kl'}, function(speaker,store)
+        local players = GetPlayer(store.args[1],speaker)
+        local bool = store.args[3] or store.args[2]
+	    if players then
+            for _,v in pairs(players) do
+                local mode = GetModeFromText(store.args[2]) or "Soft"
+                if not Functions.ListFind("Targetlist",v.Name,mode) then
+                    if GetBool(bool) == true then
+                        ListFilter({"Whitelist"},v.Name)
+                    end
+                    if not Functions.ListFind("Whitelist",v.Name) then
+                        Functions.ListInsert("Targetlist",v.Name,mode)
+                        Functions.Chat("Added "..v.Name.." to the "..mode.." Targetlist")
+                    end
+                end
+            end
+        end
+    end)
+
+    AddCommand('breakshur', {'breakshurs', 'break', 'bs', 'unshuriken', 'unshur'}, function(speaker,store)
+        local players = GetPlayer(store.args[1],speaker)
+        if players then
+            for _,v in pairs(players) do
+                local mode = GetModeFromText(store.args[2]) or "Normal"
+                if not Functions.ListFind("BreakShurlist",v.Name,mode) then
+                    Functions.ListInsert("BreakShurlist",v.Name,mode)
+                    Functions.Chat("Added "..v.Name.." to the "..mode.." BreakShurlist")
+                end
+            end
+        end
+    end)
+
+    AddCommand('unbreakshur', {'unbreakshurs', 'unbreak', 'unbs', 'shuriken', 'shur'}, function(speaker,store)
+        local players = GetPlayer(store.args[1],speaker)
+        if players then
+            for _,v in pairs(players) do
+                local mode = GetModeFromText(store.args[2]) or "Normal"
+                if Functions.ListFind("BreakShurlist",v.Name,mode) then
+                    Functions.ListRemove("BreakShurlist",v.Name,mode)
+                    Functions.Chat("Removed "..v.Name.." from the "..mode.." BreakShurlist")
+                end
+            end
+        end
+    end)
+
+    AddCommand('disableshurs', {'disableshur', 'disable', 'ds', 'noshurikens', 'noshur'}, function(speaker,store)
+        local players = GetPlayer(store.args[1],speaker)
+        if players then
+            for _,v in pairs(players) do
+                local mode = GetModeFromText(store.args[2]) or "Normal"
+                if not Functions.ListFind("DisableShurslist",v.Name,mode) then
+                    Functions.ListRemove("DisableShurslist",v.Name,mode)
+                    Functions.Chat("Added "..v.Name.." to the "..mode.." DisableShurslist")
+                end
+            end
+        end
+    end)
+
+    AddCommand('undisableshurs', {'undisableshur', 'undisable', 'unds', 'yesshurikens', 'yesshur'}, function(speaker,store)
+        local players = GetPlayer(store.args[1],speaker)
+        if players then
+            for _,v in pairs(players) do
+                local mode = GetModeFromText(store.args[2]) or "Normal"
+                if Functions.ListFind("DisableShurslist",v.Name,mode) then
+                    Functions.ListRemove("DisableShurslist",v.Name,mode)
+                    Functions.Chat("Removed "..v.Name.." from the "..mode.." DisableShurslist")
+                end
+            end
+        end
+    end)
+
+    AddCommand('rejoin', {'rj'}, function(speaker,store)
+        if #Players:GetPlayers() <= 1 then
+            Players.LocalPlayer:Kick("\nRejoining...")
+            task.wait(0.03)
+            game:GetService('TeleportService'):Teleport(game.PlaceId, Players.LocalPlayer)
+        else
+            game:GetService('TeleportService'):TeleportToPlaceInstance(game.PlaceId, game.JobId, Players.LocalPlayer)
+        end
+    end)
+
+    do
+
+        local Instances = {
+            CommandGui = Instance.new("ScreenGui");
+            CommandBarFrame = Instance.new("Frame");
+            CommandBar = Instance.new("TextBox");
+            CommandBarCorner = Instance.new("UICorner");
+        }
+
+        Instances.CommandGui.Name = "MainGui"
+        Instances.CommandGui.Parent = game:GetService("CoreGui")
+        Instances.CommandGui.ResetOnSpawn = false
+        Instances.CommandGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+
+        Instances.CommandBarFrame.Name = "CommandBarFrame"
+        Instances.CommandBarFrame.Parent = Instances.CommandGui
+        Instances.CommandBarFrame.AnchorPoint = Vector2.new(0.5, 0)
+        Instances.CommandBarFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        Instances.CommandBarFrame.Position = UDim2.new(0.5, 0, 1, 0)
+        Instances.CommandBarFrame.Size = UDim2.new(0.0933617353, 0, 0.0327022374, 0)
+        Instances.CommandBarFrame.BackgroundTransparency = 1
+
+        Instances.CommandBar.Name = "CommandBar"
+        Instances.CommandBar.Parent = Instances.CommandBarFrame
+        Instances.CommandBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        Instances.CommandBar.BackgroundTransparency = 1.000
+        Instances.CommandBar.Size = UDim2.new(1, 0, 1, 0)
+        Instances.CommandBar.ClearTextOnFocus = false
+        Instances.CommandBar.Font = Enum.Font.Gotham
+        Instances.CommandBar.Text = ""
+        Instances.CommandBar.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Instances.CommandBar.TextScaled = true
+        Instances.CommandBar.TextSize = 14.000
+        Instances.CommandBar.TextWrapped = true
+
+        Instances.CommandBarCorner.Parent = Instances.CommandBarFrame
+
+        local commandbarvisible = false
+        local textbox = Instances.CommandBar
+        local frame = Instances.CommandBarFrame
+
+        Functions.UserInputBegan.CommandBar = function(processed, input)
+            if not processed and input.KeyCode == CMDBAR_KEYBIND then
+                if commandbarvisible == false then
+                    Functions.CreateTween(frame,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{Position = UDim2.new(0.5,0,0.9,0)},true)
+                    Functions.CreateTween(frame,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{BackgroundTransparency = 0},true)
+                    textbox:CaptureFocus()
+                    task.wait()
+                    textbox.Text = ""
+                    commandbarvisible = true
+                end
+            end
+        end
+
+        textbox.FocusLost:Connect(function()
+            local msg = textbox.Text
+            local original = msg:split(" ")
+            msg = msg:lower()
+            local splitString = msg:split(" ")
+            local cmdname = splitString[1]
+            if cmdname then
+                local args = {}
+                local strargs = ""
+                for i = 2, #splitString, 1 do
+                    if splitString[i] ~= cmdname then
+                        table.insert(args,splitString[i])
+                    end
+                end
+                local num = 2
+                for i = 2, #original, 1 do
+                    if splitString[i] ~= cmdname then
+                        if i ~= num then
+                            strargs = strargs.." "..original[i]
+                        else
+                            strargs = strargs..original[i]
+                        end
+                    else
+                        num += 1
+                    end
+                end
+                ExecuteCommand(cmdname,Players.LocalPlayer,{['args'] = args, ['strargs'] = strargs})
+            end
+        end)
+
+        Players.LocalPlayer.Chatted:Connect(function(msg)
+            local original = msg:split(" ")
+            msg = msg:lower()
+            local splitString = msg:split(" ")
+            if splitString[1] == "/e" then
+                table.remove(splitString,1)
+            end
+            local cmdname = PrefixCheck(splitString)
+            if cmdname ~= nil then
+                local args = {}
+                local strargs = ""
+                for i = 2, #splitString, 1 do
+                    if splitString[i] ~= cmdname then
+                        table.insert(args,splitString[i])
+                    end
+                end
+                local num = 2
+                for i = 2, #original, 1 do
+                    if splitString[i] ~= cmdname then
+                        if i ~= num then
+                            strargs = strargs.." "..original[i]
+                        else
+                            strargs = strargs..original[i]
+                        end
+                    else
+                        num += 1
+                    end
+                end
+                ExecuteCommand(cmdname,Players.LocalPlayer,{['args'] = args, ['strargs'] = strargs})
+            end
+        end)
+
+    end
 
 end
 
