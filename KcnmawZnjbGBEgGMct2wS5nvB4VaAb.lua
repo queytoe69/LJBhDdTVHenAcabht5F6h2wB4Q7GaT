@@ -1550,6 +1550,26 @@ Functions.ConvertToHMS = function(text)
     return Functions.Format(hours)..":"..Functions.Format(minutes)..":"..Functions.Format(seconds)
 end
 
+Functions.CreateTween = function(object,info,args,play,destroyfunc)
+    local tween = game:GetService("TweenService"):Create(object, info, args)
+	if play == "NoWait" or play == true then
+		tween:Play()
+		tween.Completed:Connect(function()
+			tween:Destroy()
+            if destroyfunc then
+                destroyfunc()
+            end
+		end)
+		return
+	elseif play == "Wait" then
+		tween:Play()
+		tween.Completed:Wait()
+		tween:Destroy()
+		return
+	end
+	return tween
+end
+
 Functions.GetBubble = function()
     if Character and Functions.GetRoot(Character) then
         local root = Functions.GetRoot(Character)
@@ -5212,7 +5232,7 @@ Functions.InitiateCommands = function()
         local textbox = Instances.CommandBar
         local frame = Instances.CommandBarFrame
 
-        Functions.UserInputBegan.CommandBar = function(processed, input)
+        Functions.UserInputBegan.CommandBar = function(input, processed)
             if not processed and input.KeyCode == CMDBAR_KEYBIND then
                 if commandbarvisible == false then
                     Functions.CreateTween(frame,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{Position = UDim2.new(0.5,0,0.9,0)},true)
@@ -5231,6 +5251,12 @@ Functions.InitiateCommands = function()
             msg = msg:lower()
             local splitString = msg:split(" ")
             local cmdname = splitString[1]
+            if commandbarvisible == true then
+                textbox.Text = ""
+                Functions.CreateTween(frame,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{Position = UDim2.new(0.5,0,1,0)},true)
+                Functions.CreateTween(frame,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{BackgroundTransparency = 1},true)
+                commandbarvisible = false
+            end
             if cmdname then
                 local args = {}
                 local strargs = ""
